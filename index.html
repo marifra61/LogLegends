@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="LogLegends - Track your driving hours with gamification and safety features">
+  <meta name="theme-color" content="#FF6B35">
+  <title>LogLegends - Drive Tracker</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="app-container" id="app">
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page active">
+      <div class="container">
+        <!-- Progress Section (Top) -->
+        <div class="card card-glass mb-md" id="dashboard-progress-section">
+          <div class="flex flex-between flex-center mb-sm">
+            <h3 style="font-size: var(--font-size-base); margin: 0;">📊 Compliance Progress</h3>
+            <span class="badge badge-secondary" id="total-hours-badge">0/60h</span>
+          </div>
+
+          <div class="progress-bar-wrapper" style="height: 12px; margin-bottom: var(--spacing-xs);">
+            <div class="progress-bar" id="top-total-progress-bar" style="width: 0%"></div>
+          </div>
+
+          <div class="flex flex-between" style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
+            <span>Night: <span id="top-night-hours-display">0/10h</span></span>
+            <span>Weekly: <span id="top-weekly-hours-display">0/10h</span></span>
+          </div>
+        </div>
+
+        <!-- Timer & Map Section (Centerpiece) -->
+        <div class="card mb-md text-center" id="active-drive-display" style="display: none;">
+          <div class="stat-value" id="dashboard-timer" style="font-size: 4rem; line-height: 1;">00:00:00</div>
+          <p class="mb-md">Drive in Progress</p>
+
+          <!-- Map Placeholder -->
+          <div id="dashboard-map-placeholder" class="card-glass"
+            style="height: 150px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: var(--spacing-md); border: 1px dashed var(--color-secondary);">
+            <div class="text-center">
+              <span style="font-size: 2rem;">🗺️</span>
+              <p style="font-size: var(--font-size-xs); margin: 0;">Live Tracking Map</p>
+            </div>
+          </div>
+
+          <button id="dashboard-stop-btn" class="btn btn-danger btn-lg" style="width: 100%;">
+            <span class="icon">🏁</span>
+            <span>Stop Drive</span>
+          </button>
+        </div>
+
+        <!-- Start Drive Section -->
+        <div id="start-drive-section" class="text-center mb-lg">
+          <div id="dashboard-map-idle" class="card mb-md"
+            style="height: 150px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2);">
+            <div class="text-center">
+              <span style="font-size: 3rem; opacity: 0.5;">🚗</span>
+              <p style="color: var(--color-text-muted);">Ready to log your legend?</p>
+            </div>
+          </div>
+          <button id="start-drive-btn" class="btn btn-primary btn-lg" style="width: 80%;">
+            <span class="icon">🚀</span>
+            <span>Start Drive</span>
+          </button>
+          <p id="checklist-warning" class="mt-sm" style="font-size: var(--font-size-sm); color: var(--color-warning);">
+            ⚠️ Complete checklist to enable
+          </p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid mb-md">
+          ...
+        </div>
+
+        <!-- Recent Drives -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Recent Drives</h3>
+          </div>
+          <div id="recent-drives-list">
+            <p class="text-center" style="color: var(--color-text-muted);">No drives yet. Start your first drive!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checklist Page -->
+    <div id="checklist-page" class="page">
+      <div class="container">
+        <h2 class="mb-md">🔍 Pre-Drive Checklist</h2>
+
+        <!-- Required First Step Alert -->
+        <div class="alert alert-warning mb-md">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-content">
+            <strong>REQUIRED FIRST STEP:</strong> Complete this checklist before you can start driving. This ensures
+            your safety and compliance with driving requirements.
+          </div>
+        </div>
+
+        <div class="card mb-md">
+          <p class="mb-md">Complete these safety checks before starting your drive:</p>
+
+          <div id="checklist-items">
+            <!-- Populated by JavaScript -->
+          </div>
+
+          <div class="mt-lg flex gap-sm">
+            <button id="complete-checklist-btn" class="btn btn-success" style="flex: 1;">
+              <span class="icon">✓</span>
+              <span>All Checks Complete</span>
+            </button>
+            <button id="reset-checklist-btn" class="btn btn-outline">
+              <span class="icon">↻</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card card-glass">
+          <p style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+            💡 <strong>Tip:</strong> Always complete your pre-drive checklist to maintain a high safety score!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Page -->
+    <div id="timeline-page" class="page">
+      <div class="container">
+        <h2 class="mb-md">📅 Driving Timeline</h2>
+
+        <!-- Export PDF Button -->
+        <div class="text-center mb-md">
+          <button id="export-timeline-pdf-btn" class="btn btn-primary btn-lg">
+            <span class="icon">📄</span>
+            <span>Export DMV PDF</span>
+          </button>
+        </div>
+
+        <div class="card mb-md">
+          <div class="form-group">
+            <input type="text" id="timeline-search" class="form-input" placeholder="Search drives...">
+          </div>
+        </div>
+
+        <div id="timeline-list">
+          <p class="text-center" style="color: var(--color-text-muted);">No driving history yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Page -->
+    <div id="map-page" class="page">
+      <div class="container">
+        <h2 class="mb-md">🗺️ Map View</h2>
+
+        <div class="card" style="min-height: 400px;">
+          <div id="map-container" class="text-center flex flex-column flex-center" style="min-height: 350px;">
+            <span style="font-size: 4rem;">🗺️</span>
+            <h3>Map Coming Soon</h3>
+            <p style="color: var(--color-text-muted);">Interactive map will show your drive routes and locations</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profile-page" class="page">
+      <div class="container">
+        <h2 class="mb-md">👤 Profile & Settings</h2>
+
+        <!-- User Info -->
+        <div class="card mb-md">
+          <h3 class="mb-md">Driver Information</h3>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="driver-name" class="form-input" placeholder="Enter your name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">License Goal (hours)</label>
+            <input type="number" id="license-goal" class="form-input" value="60" min="1">
+          </div>
+          <button id="save-profile-btn" class="btn btn-primary">
+            <span class="icon">💾</span>
+            <span>Save Profile</span>
+          </button>
+        </div>
+
+        <!-- Digital Signature -->
+        <div class="card mb-md">
+          <h3 class="mb-md">Digital Signature</h3>
+          <div
+            style="border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: var(--radius-md); padding: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+            <canvas id="signature-canvas"
+              style="width: 100%; height: 150px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); cursor: crosshair;"></canvas>
+          </div>
+          <div class="flex gap-sm">
+            <button id="clear-signature-btn" class="btn btn-outline">Clear</button>
+            <button id="save-signature-btn" class="btn btn-secondary">Save Signature</button>
+          </div>
+        </div>
+
+        <!-- Safety Score -->
+        <div class="card mb-md">
+          <h3 class="mb-md">Safety Score</h3>
+          <div class="text-center">
+            <div class="stat-value" style="font-size: 4rem;" id="profile-safety-score">100</div>
+            <p style="color: var(--color-text-secondary);">Excellent! Keep up the safe driving habits.</p>
+          </div>
+        </div>
+
+        <!-- Export DMV PDF Button -->
+        <div class="text-center mb-md">
+          <button id="export-profile-pdf-btn" class="btn btn-primary btn-lg">
+            <span class="icon">📄</span>
+            <span>Export DMV PDF</span>
+          </button>
+        </div>
+
+        <!-- Premium Feature -->
+        <div class="card card-glass">
+          <h3 class="mb-md">📄 DMV-Ready PDF Export</h3>
+          <p class="mb-md" style="color: var(--color-text-secondary);">Export your complete driving log as a
+            professional PDF for DMV submission.</p>
+          <button id="export-pdf-btn" class="btn btn-primary" style="width: 100%;">
+            <span class="icon">⭐</span>
+            <span>Upgrade to Premium</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="#dashboard" class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#checklist" class="nav-item" data-page="checklist">
+        <span class="nav-icon">✓</span>
+        <span>Checklist</span>
+        <span class="nav-badge">REQUIRED</span>
+      </a>
+      <a href="#timeline" class="nav-item" data-page="timeline">
+        <span class="nav-icon">📅</span>
+        <span>Timeline</span>
+      </a>
+      <a href="#map" class="nav-item" data-page="map">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="#profile" class="nav-item" data-page="profile">
+        <span class="nav-icon">👤</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Active Drive Modal -->
+  <div id="active-drive-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">🚗 Active Drive</h3>
+        <button class="modal-close" id="close-drive-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-md">
+          <div class="stat-value" id="drive-timer">00:00:00</div>
+          <p style="color: var(--color-text-secondary);">Drive Duration</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Trip Notes</label>
+          <textarea id="trip-notes" class="form-textarea" placeholder="Add notes about your drive..."></textarea>
+          <button id="voice-input-btn" class="btn btn-secondary mt-xs" style="width: 100%;">
+            <span class="icon">🎤</span>
+            <span id="voice-btn-text">Start Voice Input</span>
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Weather Conditions</label>
+          <select id="weather-select" class="form-select">
+            <option value="sunny">☀️ Sunny</option>
+            <option value="cloudy">☁️ Cloudy</option>
+            <option value="rainy">🌧️ Rainy</option>
+            <option value="snowy">❄️ Snowy</option>
+            <option value="foggy">🌫️ Foggy</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="end-drive-btn" class="btn btn-success">
+          <span class="icon">🏁</span>
+          <span>End Drive</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Educational Tip Modal -->
+  <div id="tip-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">💡 Driving Tip</h3>
+        <button class="modal-close" id="close-tip-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="tip-content" style="font-size: var(--font-size-lg); line-height: 1.6;"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="dismiss-tip-btn" class="btn btn-primary">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Paywall Modal -->
+  <div id="premium-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⭐ Upgrade to Premium</h3>
+        <button class="modal-close" id="close-premium-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-md">
+          <span style="font-size: 4rem;">🎉</span>
+        </div>
+        <h3 class="text-center mb-md">Unlock Premium Features</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li
+            style="padding: var(--spacing-sm); margin-bottom: var(--spacing-xs); background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-md);">
+            ✓ DMV-Ready PDF Export
+          </li>
+          <li
+            style="padding: var(--spacing-sm); margin-bottom: var(--spacing-xs); background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-md);">
+            ✓ Advanced Analytics
+          </li>
+          <li
+            style="padding: var(--spacing-sm); margin-bottom: var(--spacing-xs); background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-md);">
+            ✓ Unlimited Drive History
+          </li>
+          <li
+            style="padding: var(--spacing-sm); margin-bottom: var(--spacing-xs); background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-md);">
+            ✓ Priority Support
+          </li>
+        </ul>
+        <div class="text-center mt-md">
+          <p
+            style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">
+            $9.99/month</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="close-premium-modal-btn" class="btn btn-outline">Maybe Later</button>
+        <button id="upgrade-btn" class="btn btn-primary">Upgrade Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="storage.js"></script>
+  <script src="voice.js"></script>
+  <script src="tips.js"></script>
+  <script src="premium.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="checklist.js"></script>
+  <script src="timeline.js"></script>
+  <script src="map.js"></script>
+  <script src="profile.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
