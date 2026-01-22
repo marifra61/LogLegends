@@ -3,68 +3,60 @@
     --accent-orange: #ff6d00;
     --accent-cyan: #00e5ff;
     --text-light: #ffffff;
-    --panel-alpha: rgba(15, 15, 15, 0.85);
+    --panel-alpha: rgba(15, 15, 15, 0.9);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body, html {
     height: 100%;
+    width: 100%;
     background: var(--bg-dark);
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden; /* Prevents unwanted scrolling */
+    position: fixed; /* Extra protection for mobile browsers */
 }
 
 #app-container {
-    position: relative;
-    height: 100vh;
-    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Uses the actual available height */
 }
 
 #map-display {
-    position: absolute;
-    top: 0;
-    left: 0;
+    flex-grow: 1; /* Map takes up all available space */
     width: 100%;
-    height: 100%;
-    z-index: 1;
 }
 
 .dashboard-panel {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
     background: var(--panel-alpha);
-    border: 2px solid var(--accent-orange);
-    border-radius: 15px;
-    padding: 20px;
+    border-top: 3px solid var(--accent-orange);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px env(safe-area-inset-bottom); /* Handles iPhone notches */
     z-index: 10;
-    backdrop-filter: blur(10px);
-    text-align: center;
     color: var(--text-light);
+    text-align: center;
 }
 
 .timer-display #timer {
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 800;
     color: var(--accent-orange);
-    text-shadow: 0 0 15px rgba(255, 109, 0, 0.5);
-    margin: 10px 0;
+    margin-bottom: 10px;
 }
 
 .action-button {
     width: 100%;
-    padding: 18px;
+    padding: 20px;
     background: var(--accent-cyan);
     border: none;
-    border-radius: 10px;
-    font-size: 1.2rem;
+    border-radius: 12px;
+    font-size: 1.3rem;
     font-weight: bold;
     color: var(--bg-dark);
-    text-transform: uppercase;
-    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
-    cursor: pointer;
+    box-shadow: 0 -4px 15px rgba(0, 229, 255, 0.2);
 }
