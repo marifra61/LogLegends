@@ -2,9 +2,11 @@
 let driveInterval;
 let startTime;
 let isUnlocked = false;
+let drivePath = []; // To store GPS coordinates
+let polyline;
 
-// Mock Persistence State
-let stats = { total: 12.5, night: 2.0, weekly: 4.2 }; 
+// RESET DATA: Starting fresh at 0.0
+let stats = { total: 0.0, night: 0.0, weekly: 0.0 }; 
 
 const ChecklistItems = [
     { id: 'mirrors', label: 'Adjust all mirrors', icon: '' },
@@ -24,27 +26,38 @@ window.showPage = function(pageId) {
     if(pageId === 'dashboard') {
         document.getElementById('nav-dash').classList.add('active');
         refreshDriveButton();
-    } else if(pageId === 'timeline') {
-        document.getElementById('nav-time').classList.add('active');
     }
 };
 
 function updateComplianceUI() {
-    // Update Progress Bars
     document.getElementById('bar-total').style.width = `${Math.min((stats.total / 60) * 100, 100)}%`;
     document.getElementById('bar-night').style.width = `${Math.min((stats.night / 10) * 100, 100)}%`;
     document.getElementById('bar-weekly').style.width = `${Math.min((stats.weekly / 10) * 100, 100)}%`;
-
-    // Update Text Labels
     document.getElementById('txt-total').textContent = `${stats.total.toFixed(1)}h`;
     document.getElementById('txt-night').textContent = `${stats.night.toFixed(1)}h`;
     document.getElementById('txt-weekly').textContent = `${stats.weekly.toFixed(1)}h`;
 }
 
-// Auto-Night Logic
-function isNightTime() {
-    const hour = new Date().getHours();
-    return hour >= 18 || hour < 6; // 6 PM to 6 AM
+// GPS Tracking Logic
+function startGpsTracking() {
+    drivePath = [];
+    if (polyline) polyline.setMap(null); // Clear old paths
+    
+    polyline = new google.maps.Polyline({
+        path: [],
+        geodesic: true,
+        strokeColor: "#00e5ff",
+        strokeOpacity: 1.0,
+        strokeWeight: 4,
+        map: map
+    });
+
+    navigator.geolocation.watchPosition((position) => {
+        const newPoint = { lat: position.coords.latitude, lng: position.coords.longitude };
+        drivePath.push(newPoint);
+        polyline.setPath(drivePath);
+        map.panTo(newPoint); // Keep map centered on you
+    }, (err) => console.error("GPS Error", err), { enableHighAccuracy: true });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="checklist-card"><input type="checkbox" class="vibe-check" id="c-${item.id}"><label for="c-${item.id}">${item.icon} ${item.label}</label></div>
     `).join('');
 
-    document.getElementById('complete-checklist-btn').onclick = function() {
+    document.getElementById('complete-checklist-btn').onclick = () => {
         if (document.querySelectorAll('.vibe-check:checked').length === 8) {
             isUnlocked = true;
             window.showPage('dashboard');
@@ -66,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.textContent = "STOP DRIVE";
             this.style.backgroundColor = "#ff4444";
             startTime = Date.now();
+            startGpsTracking(); // Start drawing path
             driveInterval = setInterval(() => {
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 document.getElementById('timer').textContent = new Date(elapsed * 1000).toISOString().substr(11, 8);
@@ -73,15 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             clearInterval(driveInterval);
             const hoursEarned = (Date.now() - startTime) / 3600000;
-            
-            // Auto-Attribution
             stats.total += hoursEarned;
             stats.weekly += hoursEarned;
-            if (isNightTime()) {
-                stats.night += hoursEarned;
-                console.log("Night hours automatically attributed.");
-            }
-
+            if (new Date().getHours() >= 18 || new Date().getHours() < 6) stats.night += hoursEarned;
+            
             isUnlocked = false;
             this.textContent = "START DRIVE";
             updateComplianceUI();
@@ -105,7 +114,7 @@ function refreshDriveButton() {
 
 window.initMap = () => {
     map = new google.maps.Map(document.getElementById("map-display"), {
-        center: { lat: 35.584, lng: -78.800 }, zoom: 15, disableDefaultUI: true,
+        center: { lat: 35.584, lng: -78.800 }, zoom: 17, disableDefaultUI: true,
         styles: [{ "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }]
     });
 };
