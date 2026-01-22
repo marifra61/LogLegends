@@ -17,44 +17,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ============================================
-// GOOGLE LOGIN HANDLER - MUST BE ON WINDOW
-// ============================================
-function handleCredentialResponse(response) {
-    try {
-        if (!response || !response.credential) {
-            console.error('Invalid credential response');
-            return;
-        }
-        
-        // Decode JWT token
-        const base64Url = response.credential.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        
-        const payload = JSON.parse(jsonPayload);
-        
-        // Store user info
-        localStorage.setItem('log_uid', payload.sub);
-        localStorage.setItem('log_name', payload.name || 'User');
-        localStorage.setItem('log_pic', payload.picture || '');
-        localStorage.setItem('log_email', payload.email || '');
-        
-        console.log('Login successful:', payload.name);
-        
-        // Reload to sync with cloud
-        location.reload();
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('Login failed. Please try again.');
-    }
-}
-
-// CRITICAL: Make it globally available for Google's callback
-window.handleCredentialResponse = handleCredentialResponse;
-
-// ============================================
 // NAVIGATION
 // ============================================
 window.showPage = function(pageId) {
