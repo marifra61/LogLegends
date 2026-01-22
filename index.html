@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | AntiGravity</title>
+    <title>LogLegends | Secure Drive</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
         <div class="top-nav">
             <div class="progress-container"><div id="top-total-progress-bar" class="progress-fill"></div></div>
-            <div class="badge-row">
-                <span id="total-hours-badge">0/60h</span>
-                <span id="top-night-hours-display">0/10h</span>
-            </div>
+            <div class="badge-row"><span id="total-hours-badge">0/60h</span><span id="top-night-hours-display">0/10h</span></div>
         </div>
 
         <main id="main-content">
@@ -21,28 +18,25 @@
                 <div id="map-display"></div>
                 <div class="dashboard-panel">
                     <div class="timer-display"><div id="timer">00:00:00</div></div>
-                    <div id="checklist-warning" class="warning-box"> Complete Safety Checklist to unlock drive</div>
+                    <div id="checklist-warning" class="warning-box"> Complete Checklist to Unlock Start Button</div>
                     <button id="start-drive-btn" class="action-button" disabled>START DRIVE</button>
                 </div>
             </section>
 
             <section id="page-checklist" class="page">
-                <div class="page-header"><h3>Safety Checklist</h3></div>
+                <div class="page-header">
+                    <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
+                    <h3>Safety Checklist</h3>
+                </div>
                 <div id="checklist-items" class="checklist-grid"></div>
-                <button id="complete-checklist-btn" class="action-button">Verify All Checks</button>
-            </section>
-
-            <section id="page-timeline" class="page">
-                <div class="page-header"><h3>Drive History</h3></div>
-                <div id="timeline-list" class="timeline-container"></div>
+                <button id="complete-checklist-btn" class="action-button secondary">Verify & Unlock Drive</button>
             </section>
         </main>
 
         <nav class="bottom-nav">
-            <button class="nav-item active" data-page="dashboard"><span></span>Dashboard</button>
-            <button class="nav-item" data-page="checklist"><span></span>Checklist</button>
-            <button class="nav-item" data-page="timeline"><span></span>History</button>
-            <button class="nav-item" data-page="profile"><span></span>Profile</button>
+            <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
+            <button class="nav-item" onclick="showPage('checklist')" id="nav-check"><span></span>Checklist</button>
+            <button class="nav-item" onclick="alert('Timeline coming soon')"><span></span>History</button>
         </nav>
     </div>
     <script src="app.js"></script>

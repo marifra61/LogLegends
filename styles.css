@@ -76,3 +76,9 @@ body, html { height: 100dvh; margin: 0; background: var(--bg-dark); color: white
     min-height: 50px;
     padding: 10px 15px;
 }
+.page-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.back-btn { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; }
+#page-checklist { overflow-y: auto; padding-bottom: 120px; }
+.action-button.secondary { background: var(--accent-orange); margin-top: 20px; }
+.page { display: none; flex-direction: column; width: 100%; height: 100%; }
+.page.active { display: flex !important; }
