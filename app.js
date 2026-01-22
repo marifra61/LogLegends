@@ -1,17 +1,8 @@
-﻿// LogLegends Unified Dashboard & GPS Engine
+﻿import Storage from './storage.js';
+
 let map;
 let driveInterval;
 let startTime;
-
-// Mock Storage for Verification
-const Storage = {
-    getStats: () => ({ totalHours: 12.5, goal: 60 }),
-    getChecklistComplete: () => {
-        const mirrors = document.getElementById('check-mirrors').checked;
-        const belt = document.getElementById('check-belt').checked;
-        return mirrors && belt;
-    }
-};
 
 window.initMap = function() {
     map = new google.maps.Map(document.getElementById("map-display"), {
@@ -30,34 +21,18 @@ function loadGoogleMaps() {
     document.head.appendChild(script);
 }
 
-function updateProgress() {
-    const stats = Storage.getStats();
-    const percent = (stats.totalHours / stats.goal) * 100;
+function updateUIFromStorage() {
+    const data = Storage.getData();
+    const percent = (data.profile.totalHours / data.profile.goal) * 100;
     document.getElementById('top-total-progress-bar').style.width = `${percent}%`;
-    document.getElementById('total-hours-badge').textContent = `${stats.totalHours} / ${stats.goal}h`;
-}
-
-function toggleChecklist() {
-    const btn = document.getElementById('start-drive-btn');
-    const warning = document.getElementById('checklist-warning');
-    if (Storage.getChecklistComplete()) {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        warning.style.display = "none";
-    } else {
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-        warning.style.display = "block";
-    }
+    document.getElementById('total-hours-badge').textContent = `${data.profile.totalHours.toFixed(1)} / ${data.profile.goal}h`;
+    document.getElementById('top-night-hours-display').textContent = `${data.profile.nightHours.toFixed(1)}/${data.profile.nightGoal}h`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    Storage.init();
     loadGoogleMaps();
-    updateProgress();
-
-    // Checklist Listeners
-    document.getElementById('check-mirrors').addEventListener('change', toggleChecklist);
-    document.getElementById('check-belt').addEventListener('change', toggleChecklist);
+    updateUIFromStorage();
 
     const startBtn = document.getElementById('start-drive-btn');
     startBtn.addEventListener('click', () => {
@@ -67,10 +42,20 @@ document.addEventListener('DOMContentLoaded', () => {
             startTime = Date.now();
             driveInterval = setInterval(updateTimer, 1000);
         } else {
+            const elapsedHours = (Date.now() - startTime) / (1000 * 60 * 60);
+            
+            // Save the drive
+            Storage.saveDrive({
+                duration: elapsedHours,
+                isNight: new Date().getHours() >= 18 || new Date().getHours() < 6,
+                timestamp: new Date().toISOString()
+            });
+
             clearInterval(driveInterval);
             startBtn.textContent = "START DRIVE";
             startBtn.style.backgroundColor = "#00e5ff";
-            alert("Drive session saved to LogLegends history.");
+            updateUIFromStorage();
+            alert("Drive session saved!");
         }
     });
 });
