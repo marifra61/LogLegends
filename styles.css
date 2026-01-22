@@ -44,3 +44,19 @@ body, html { height: 100dvh; margin: 0; background: var(--bg-dark); color: white
 .vibe-check { width: 25px; height: 25px; accent-color: var(--accent-orange); }
 
 .warning-box { background: rgba(255, 109, 0, 0.1); color: var(--accent-orange); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+/* Add this to your existing styles.css */
+#page-checklist {
+    padding-bottom: 80px; /* Space for the bottom nav */
+}
+
+.checklist-grid {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+#complete-checklist-btn {
+    background: var(--accent-orange); /* Different color to stand out */
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 109, 0, 0.3);
+}

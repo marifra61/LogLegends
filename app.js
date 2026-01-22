@@ -2,6 +2,7 @@
 let map;
 let startTime;
 let driveInterval;
+let isChecklistComplete = false; // Global state for the drive lock
 
 const ChecklistData = [
     { id: 'mirrors', label: 'Mirrors Adjusted', icon: '' },
@@ -10,15 +11,16 @@ const ChecklistData = [
     { id: 'lights', label: 'Lights Checked', icon: '' }
 ];
 
-// Navigation Logic
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(`page-${pageId}`).classList.add('active');
     document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+    
+    // Refresh button state whenever we return to dashboard
+    if (pageId === 'dashboard') updateStartButton();
 }
 
-// Checklist Rendering (From checklist.js)
 function renderChecklist() {
     const container = document.getElementById('checklist-items');
     container.innerHTML = ChecklistData.map(item => `
@@ -27,6 +29,21 @@ function renderChecklist() {
             <label for="check-${item.id}">${item.icon} ${item.label}</label>
         </div>
     `).join('');
+}
+
+function updateStartButton() {
+    const startBtn = document.getElementById('start-drive-btn');
+    const warning = document.getElementById('checklist-warning');
+    if (isChecklistComplete) {
+        startBtn.disabled = false;
+        startBtn.style.opacity = "1";
+        startBtn.style.backgroundColor = "#00e5ff";
+        warning.style.display = "none";
+    } else {
+        startBtn.disabled = true;
+        startBtn.style.opacity = "0.5";
+        warning.style.display = "block";
+    }
 }
 
 window.initMap = function() {
@@ -41,28 +58,47 @@ window.initMap = function() {
 document.addEventListener('DOMContentLoaded', () => {
     renderChecklist();
     
-    // Page Swapping Listeners
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.addEventListener('click', () => showPage(btn.dataset.page));
     });
 
-    // Start Drive Unlock Logic (From dashboard.js)
+    // Unified Verify Function (From checklist.js completeChecklist)
     document.getElementById('complete-checklist-btn').addEventListener('click', () => {
         const checks = document.querySelectorAll('.vibe-check');
         const allChecked = Array.from(checks).every(c => c.checked);
         
         if (allChecked) {
-            document.getElementById('start-drive-btn').disabled = false;
-            document.getElementById('start-drive-btn').style.opacity = "1";
-            document.getElementById('checklist-warning').style.display = "none";
-            alert(" Safety Checks Complete. Returning to Dashboard.");
+            isChecklistComplete = true; // Unlock the drive
+            alert(" Safety Checks Complete!");
             showPage('dashboard');
         } else {
-            alert(" Please complete all safety checks first!");
+            alert(" Please complete ALL safety checks first!");
         }
     });
 
-    // Map Loader
+    const startBtn = document.getElementById('start-drive-btn');
+    startBtn.addEventListener('click', () => {
+        if (startBtn.textContent === "START DRIVE") {
+            startBtn.textContent = "STOP DRIVE";
+            startBtn.style.backgroundColor = "#ff4444";
+            startTime = Date.now();
+            driveInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const hrs = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        } else {
+            clearInterval(driveInterval);
+            startBtn.textContent = "START DRIVE";
+            startBtn.style.backgroundColor = "#00e5ff";
+            isChecklistComplete = false; // Relock after drive
+            alert("Drive session logged!");
+            updateStartButton();
+        }
+    });
+
     const apiKey = "AIzaSyB1DACu4yoRMzIdvo0USYc-Gg4vtRvEDZk"; 
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
