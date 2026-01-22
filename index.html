@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LogLegends | Driving Logs</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="login-handler.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div id="app-container">
@@ -43,12 +41,11 @@
                          data-callback="handleCredentialResponse">
                     </div>
                     <div class="g_id_signin" id="google-btn"></div>
-                    
-                    <div id="user-display" style="display:none; margin-top:20px;">
-                        <img id="user-pic" src="" style="border-radius:50%; width:50px; border:2px solid #00e5ff;">
-                        <h3 id="user-name" style="color:white; margin:5px 0;"></h3>
-                        <p style="color:#00e5ff; font-size:0.8rem;"> Cloud Sync Active</p>
-                        <button onclick="localStorage.clear(); location.reload();" class="back-btn" style="margin-top:10px;">Logout</button>
+                    <div id="user-display" style="display:none; margin-top:20px; text-align: center;">
+                        <img id="user-pic" src="" style="border-radius:50%; width:60px; border:2px solid #00e5ff;">
+                        <h3 id="user-name" style="color:white; margin:10px 0;"></h3>
+                        <p style="color:#00e5ff; font-size:0.8rem;"> Cloud Sync Connected</p>
+                        <button onclick="localStorage.clear(); location.reload();" class="back-btn" style="margin-top:20px;">Logout / Reset</button>
                     </div>
                 </div>
             </section>
@@ -61,6 +58,8 @@
         </nav>
     </div>
     
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="login-handler.js"></script>
     <script src="app.js"></script>
     <script type="module" src="cloud-sync.js"></script>
 </body>

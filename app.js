@@ -1,4 +1,10 @@
-﻿window.showPage = function(pageId) {
+﻿window.showPage = function(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    const navId = (id === 'dashboard') ? 'nav-dash' : 'nav-' + id.substring(0,4);
+    if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+};window.showPage = function(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     
@@ -8,8 +14,6 @@
     if (targetPage) targetPage.classList.add('active');
     if (targetNav) targetNav.classList.add('active');
     console.log('Navigating to:', pageId);
-};import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
@@ -73,4 +77,5 @@ window.showPage = (id) => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
 };
+
 
