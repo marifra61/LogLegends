@@ -24,20 +24,29 @@
                 </div>
             </section>
 
+            <section id="page-checklist" class="page">
+                <div class="page-header" style="justify-content: space-between; display: flex; width: 100%;">
+                    <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
+                    <h3>Safety Check</h3>
+                    <button id="complete-checklist-btn" class="verify-btn">VERIFY</button>
+                </div>
+                <div id="checklist-items" class="checklist-grid"></div>
+            </section>
+
             <section id="page-profile" class="page">
                 <div class="page-header"><h3>Driver Profile</h3></div>
                 <div class="profile-card">
                     <div id="g_id_onload" 
                          data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" 
-                         data-callback="handleCredentialResponse"
-                         data-auto_prompt="false">
+                         data-callback="handleCredentialResponse">
                     </div>
                     <div class="g_id_signin" data-type="standard"></div>
                     
-                    <div id="sync-status-area" style="margin-top: 20px; padding: 15px; background: #111; border: 1px solid #333; border-radius: 10px; display: none !important;">
+                    <div id="sync-status-area" style="margin-top: 20px; padding: 15px; background: #111; border: 1px solid #333; border-radius: 10px; display: none;">
                         <div id="user-info"></div>
                         <p style="font-size: 0.8rem; color: #00e5ff; margin: 10px 0 0 0;"> Cloud Sync Active</p>
                         <p style="font-size: 0.7rem; color: #888;">Last Backup: <span id="sync-time">Never</span></p>
+                        <button onclick="localStorage.clear(); location.reload();" class="back-btn" style="margin-top:10px; font-size:0.6rem;">Logout</button>
                     </div>
                 </div>
             </section>

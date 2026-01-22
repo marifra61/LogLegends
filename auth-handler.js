@@ -13,31 +13,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// GLOBAL BRIDGE
 window.handleCredentialResponse = async (response) => {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    console.log("Login Success for:", payload.name);
-    
     localStorage.setItem('loglegends_user_id', payload.sub);
     localStorage.setItem('loglegends_user_name', payload.name);
     localStorage.setItem('loglegends_user_pic', payload.picture);
-
-    showCloudUI(payload.name, payload.picture, "Syncing...");
+    
+    renderUI(payload.name, payload.picture, "Syncing...");
     await window.syncToCloud();
 };
 
-function showCloudUI(name, pic, time) {
+function renderUI(name, pic, time) {
     const area = document.getElementById('sync-status-area');
     const btn = document.querySelector(".g_id_signin");
-    
-    if (area) {
-        area.setAttribute('style', 'display: block !important; margin-top: 20px; padding: 15px; background: #111; border-radius: 10px;');
-    }
+    if (area) area.style.display = "block";
     if (btn) btn.style.display = "none";
     
     document.getElementById('user-info').innerHTML = `
-        <img src="${pic}" style="border-radius:50%; width:50px; border: 2px solid #00e5ff;">
-        <p style="color:white; font-weight:bold; margin-top:5px;">${name}</p>
+        <img src="${pic}" style="border-radius:50%; width:45px; border:2px solid #00e5ff;">
+        <p style="color:white; margin:5px 0; font-weight:bold;">${name}</p>
     `;
     document.getElementById('sync-time').textContent = time;
 }
@@ -45,22 +39,19 @@ function showCloudUI(name, pic, time) {
 window.syncToCloud = async () => {
     const uid = localStorage.getItem('loglegends_user_id');
     if (!uid) return;
+    
+    // FETCH DATA DIRECTLY FROM STORAGE TO PREVENT SCOPE ERRORS
+    const localStats = JSON.parse(localStorage.getItem('driving_stats')) || {total: 0, night: 0, weekly: 0};
     const time = new Date().toLocaleTimeString();
+    
     try {
-        await setDoc(doc(db, "users", uid), { 
-            stats: (window.stats || {total:0, night:0, weekly:0}),
-            lastUpdated: time 
-        }, { merge: true });
+        await setDoc(doc(db, "users", uid), { stats: localStats, lastUpdated: time }, { merge: true });
         document.getElementById('sync-time').textContent = time;
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Cloud Sync Error:", e); }
 };
 
-// AUTO-RESTORE
+// INITIAL LOAD CHECK
 const savedId = localStorage.getItem('loglegends_user_id');
 if (savedId) {
-    showCloudUI(
-        localStorage.getItem('loglegends_user_name'),
-        localStorage.getItem('loglegends_user_pic'),
-        "Last session restored"
-    );
+    renderUI(localStorage.getItem('loglegends_user_name'), localStorage.getItem('loglegends_user_pic'), "Session Active");
 }
