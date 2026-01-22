@@ -1,48 +1,8 @@
-﻿// 1. GLOBAL NAVIGATION
-window.showPage = function(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
-    const targetPage = document.getElementById('page-' + id);
-    if (targetPage) targetPage.classList.add('active');
-    
-    const navId = (id === 'dashboard') ? 'nav-dash' : 'nav-' + id.substring(0,4);
-    const targetNav = document.getElementById(navId);
-    if (targetNav) targetNav.classList.add('active');
-};
+// Import Firebase modules (make sure these are loaded via CDN in index.html)
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// 2. RE-ATTACH CORE EVENTS
-window.addEventListener('DOMContentLoaded', () => {
-    // Re-link the Start/Stop buttons
-    const startBtn = document.getElementById('start-drive-btn');
-    if (startBtn) {
-        startBtn.onclick = () => { if(window.startDrive) window.startDrive(); };
-    }
-
-    // Re-link the Checklist Verify button
-    const verifyBtn = document.getElementById('complete-checklist-btn');
-    if (verifyBtn) {
-        verifyBtn.onclick = () => { if(window.validateChecklist) window.validateChecklist(); };
-    }
-    
-    console.log("Button listeners re-attached.");
-});window.showPage = function(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
-    const navId = (id === 'dashboard') ? 'nav-dash' : 'nav-' + id.substring(0,4);
-    if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
-};window.showPage = function(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
-    const targetPage = document.getElementById('page-' + pageId);
-    const targetNav = document.getElementById('nav-' + (pageId === 'dashboard' ? 'dash' : pageId.substring(0, 4)));
-    
-    if (targetPage) targetPage.classList.add('active');
-    if (targetNav) targetNav.classList.add('active');
-    console.log('Navigating to:', pageId);
-
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
   authDomain: "lead-finder-pro-27bf2.firebaseapp.com",
@@ -52,59 +12,203 @@ const firebaseConfig = {
   appId: "1:197510050244:web:f2baf1b7ff0b81c1fb7491"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. GLOBAL LOGIN HANDLER
-window.handleCredentialResponse = async (response) => {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    localStorage.setItem('log_uid', payload.sub);
-    localStorage.setItem('log_name', payload.name);
-    localStorage.setItem('log_pic', payload.picture);
-    location.reload(); // Hard reset to trigger cloud pull
+// ============================================
+// NAVIGATION
+// ============================================
+window.showPage = function(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    const targetPage = document.getElementById('page-' + pageId);
+    const targetNav = document.getElementById('nav-' + (pageId === 'dashboard' ? 'dash' : pageId.substring(0, 4)));
+    
+    if (targetPage) targetPage.classList.add('active');
+    if (targetNav) targetNav.classList.add('active');
+    console.log('Navigating to:', pageId);
 };
 
-// 2. UI SYNC FUNCTION
+// ============================================
+// GOOGLE LOGIN HANDLER
+// ============================================
+window.handleCredentialResponse = async (response) => {
+    try {
+        if (!response || !response.credential) {
+            console.error('Invalid credential response');
+            return;
+        }
+        
+        // Decode JWT token
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const payload = JSON.parse(jsonPayload);
+        
+        // Store user info
+        localStorage.setItem('log_uid', payload.sub);
+        localStorage.setItem('log_name', payload.name || 'User');
+        localStorage.setItem('log_pic', payload.picture || '');
+        localStorage.setItem('log_email', payload.email || '');
+        
+        console.log('Login successful:', payload.name);
+        
+        // Reload to sync with cloud
+        location.reload();
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
+    }
+};
+
+// ============================================
+// UI SYNC FUNCTION
+// ============================================
 function syncProfileUI(time) {
     const uid = localStorage.getItem('log_uid');
     if (!uid) return;
     
-    document.getElementById('google-login-btn').style.display = 'none';
-    const area = document.getElementById('sync-status-area');
-    area.style.display = 'block';
+    const loginBtn = document.getElementById('google-login-btn');
+    if (loginBtn) loginBtn.style.display = 'none';
     
-    document.getElementById('user-info').innerHTML = `
-        <img src="${localStorage.getItem('log_pic')}" style="border-radius:50%; width:45px; border:2px solid #00e5ff;">
-        <p style="color:white; font-weight:bold; margin:5px 0;">${localStorage.getItem('log_name')}</p>
-    `;
-    document.getElementById('sync-time').textContent = time || "Active";
-}
-
-// 3. STARTUP SEQUENCE
-async function init() {
-    const uid = localStorage.getItem('log_uid');
-    if (uid) {
-        syncProfileUI("Restoring...");
-        try {
-            const snap = await getDoc(doc(db, "users", uid));
-            if (snap.exists()) {
-                const cloud = snap.data();
-                localStorage.setItem('driving_stats', JSON.stringify(cloud.stats));
-                syncProfileUI(cloud.lastUpdated);
-            }
-        } catch (e) { console.error(e); }
+    const syncArea = document.getElementById('sync-status-area');
+    if (syncArea) syncArea.style.display = 'block';
+    
+    const userInfo = document.getElementById('user-info');
+    if (userInfo) {
+        const name = localStorage.getItem('log_name') || 'User';
+        const pic = localStorage.getItem('log_pic') || '';
+        
+        userInfo.innerHTML = `
+            <img src="${pic}" style="border-radius:50%; width:45px; border:2px solid #00e5ff;" alt="Profile">
+            <p style="color:white; font-weight:bold; margin:5px 0;">${name}</p>
+        `;
     }
-    // Now trigger the rest of your original driving logic here...
-    console.log("App Initialized");
+    
+    const syncTime = document.getElementById('sync-time');
+    if (syncTime) syncTime.textContent = time || "Active";
 }
 
-init();
+// ============================================
+// CLOUD SYNC FUNCTIONS
+// ============================================
+async function pullFromCloud() {
+    const uid = localStorage.getItem('log_uid');
+    if (!uid) return;
+    
+    try {
+        const docRef = doc(db, "users", uid);
+        const snap = await getDoc(docRef);
+        
+        if (snap.exists()) {
+            const cloudData = snap.data();
+            if (cloudData.stats) {
+                localStorage.setItem('driving_stats', JSON.stringify(cloudData.stats));
+                console.log('Cloud data synced:', cloudData);
+                syncProfileUI(cloudData.lastUpdated || 'Just now');
+                
+                // Refresh dashboard if it exists
+                if (window.loadDashboard) {
+                    window.loadDashboard();
+                }
+            }
+        } else {
+            console.log('No cloud data found, using local data');
+        }
+    } catch (error) {
+        console.error('Error pulling from cloud:', error);
+    }
+}
 
-// Placeholder for your original driving functions (showPage, etc.)
-window.showPage = (id) => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
+window.pushToCloud = async function() {
+    const uid = localStorage.getItem('log_uid');
+    if (!uid) {
+        console.log('No user logged in');
+        return;
+    }
+    
+    try {
+        const statsStr = localStorage.getItem('driving_stats');
+        const stats = statsStr ? JSON.parse(statsStr) : {
+            totalHours: 0,
+            nightHours: 0,
+            weeklyHours: 0,
+            trips: []
+        };
+        
+        const docRef = doc(db, "users", uid);
+        await setDoc(docRef, {
+            stats: stats,
+            lastUpdated: new Date().toLocaleString(),
+            userEmail: localStorage.getItem('log_email') || ''
+        }, { merge: true });
+        
+        console.log('Data pushed to cloud');
+        syncProfileUI('Just now');
+    } catch (error) {
+        console.error('Error pushing to cloud:', error);
+    }
 };
 
+// ============================================
+// LOGOUT FUNCTION
+// ============================================
+window.logoutUser = function() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('log_uid');
+        localStorage.removeItem('log_name');
+        localStorage.removeItem('log_pic');
+        localStorage.removeItem('log_email');
+        location.reload();
+    }
+};
 
+// ============================================
+// INITIALIZATION
+// ============================================
+async function init() {
+    console.log('Initializing LogLegends...');
+    
+    const uid = localStorage.getItem('log_uid');
+    if (uid) {
+        console.log('User logged in, syncing...');
+        syncProfileUI("Syncing...");
+        await pullFromCloud();
+    } else {
+        console.log('No user logged in');
+    }
+    
+    // Re-attach button listeners
+    attachEventListeners();
+    
+    console.log('App initialized successfully');
+}
 
+// ============================================
+// EVENT LISTENERS
+// ============================================
+function attachEventListeners() {
+    const startBtn = document.getElementById('start-drive-btn');
+    if (startBtn && window.startDrive) {
+        startBtn.onclick = window.startDrive;
+    }
+    
+    const verifyBtn = document.getElementById('complete-checklist-btn');
+    if (verifyBtn && window.validateChecklist) {
+        verifyBtn.onclick = window.validateChecklist;
+    }
+    
+    console.log('Event listeners attached');
+}
+
+// Start the app when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

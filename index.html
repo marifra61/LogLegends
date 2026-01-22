@@ -1,62 +1,108 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogLegends | Driving Logs</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div id="app-container">
-        <div class="top-nav metrics-grid">
-            <div class="metric-item"><label>TOTAL</label><div class="bar-bg"><div id="bar-total" class="bar-fill cyan"></div></div><span id="txt-total">0.0h</span></div>
-            <div class="metric-item"><label>NIGHT</label><div class="bar-bg"><div id="bar-night" class="bar-fill orange"></div></div><span id="txt-night">0.0h</span></div>
-            <div class="metric-item"><label>WEEKLY</label><div class="bar-bg"><div id="bar-weekly" class="bar-fill green"></div></div><span id="txt-weekly">0.0h</span></div>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div id="google-login-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h1 style="color: white; font-size: 2.5rem; margin-bottom: 20px;">🚗 LogLegends</h1>
+            <p style="color: white; margin-bottom: 30px;">Track your driving hours with ease</p>
+            <div id="g_id_onload"
+                 data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="filled_blue"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
         </div>
 
-        <main id="main-content">
-            <section id="page-dashboard" class="page active">
-                <div id="map-display"></div>
-                <div class="dashboard-panel">
-                    <div class="timer-display"><div id="timer">00:00:00</div></div>
-                    <div id="checklist-warning" class="warning-box"> Safety Check Required</div>
-                    <button id="start-drive-btn" class="action-button" disabled>START DRIVE</button>
-                </div>
-            </section>
+        <!-- Sync Status Area (hidden until logged in) -->
+        <div id="sync-status-area" style="display:none; position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; z-index: 1000;">
+            <div id="user-info" style="display: flex; align-items: center; gap: 10px;"></div>
+            <div id="sync-time" style="color: #00e5ff; font-size: 0.8rem; margin-top: 5px;"></div>
+            <button onclick="pushToCloud()" style="margin-top: 5px; padding: 5px 10px; background: #00e5ff; border: none; border-radius: 5px; cursor: pointer;">Sync Now</button>
+            <button onclick="logoutUser()" style="margin-top: 5px; padding: 5px 10px; background: #ff4444; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
+        </div>
 
-            <section id="page-checklist" class="page">
-                <div class="page-header" style="justify-content: space-between; display: flex; width: 100%;">
-                    <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
-                    <h3>Safety Check</h3>
-                    <button id="complete-checklist-btn" class="verify-btn">VERIFY</button>
-                </div>
-                <div id="checklist-items" class="checklist-grid"></div>
-            </section>
-
-            <section id="page-profile" class="page">
-                <div class="page-header"><h3>Profile</h3></div>
-                <div class="profile-card">
-                    <div id="g_id_onload" data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-                    <div class="g_id_signin" id="google-btn"></div>
-                    <div id="user-display" style="display:none; margin-top:20px; text-align: center;">
-                        <img id="user-pic" src="" style="border-radius:50%; width:60px; border:2px solid #00e5ff;">
-                        <h3 id="user-name" style="color:white; margin:10px 0;"></h3>
-                        <button onclick="localStorage.clear(); location.reload();" class="back-btn">Logout</button>
+        <!-- Dashboard Page -->
+        <div class="page active" id="page-dashboard">
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <span class="stat-label">TOTAL</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="total-progress" style="width: 0%; background: linear-gradient(90deg, #00e5ff, #00bfff);"></div>
                     </div>
+                    <span class="stat-value" id="total-hours">0.0h</span>
                 </div>
-            </section>
-        </main>
+                <div class="stat-box">
+                    <span class="stat-label">NIGHT</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="night-progress" style="width: 0%; background: linear-gradient(90deg, #ff6b35, #ff8c42);"></div>
+                    </div>
+                    <span class="stat-value" id="night-hours">0.0h</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">WEEKLY</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="weekly-progress" style="width: 0%; background: linear-gradient(90deg, #00e676, #00c853);"></div>
+                    </div>
+                    <span class="stat-value" id="weekly-hours">0.0h</span>
+                </div>
+            </div>
 
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            
+            <div class="safety-status" id="safety-status">Safety Check Required</div>
+            
+            <button class="start-btn disabled" id="start-drive-btn" disabled>START DRIVE</button>
+            
+            <div class="map-placeholder">
+                <p>🗺️ Map View</p>
+                <small>GPS tracking active during drive</small>
+            </div>
+        </div>
+
+        <!-- Checklist Page -->
+        <div class="page" id="page-checklist">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">Pre-Drive Safety Checklist</h2>
+            <div id="checklist-container"></div>
+            <button class="verify-btn" id="complete-checklist-btn">VERIFY & ENABLE START</button>
+        </div>
+
+        <!-- Profile Page -->
+        <div class="page" id="page-profile">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">Driving Timeline</h2>
+            <div id="timeline-container"></div>
+        </div>
+
+        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
-            <button class="nav-item" onclick="showPage('checklist')" id="nav-check"><span></span>Check</button>
+            <button class="nav-item" onclick="showPage('checklist')" id="nav-chec"><span></span>Check</button>
             <button class="nav-item" onclick="showPage('profile')" id="nav-prof"><span></span>Profile</button>
         </nav>
     </div>
-    
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="login-handler.js"></script>
-    <script src="app.js"></script>
-    <script type="module" src="cloud-sync.js"></script>
+
+    <!-- Load scripts in correct order -->
+    <script type="module" src="app.js"></script>
+    <script src="storage.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="checklist.js"></script>
+    <script src="timeline.js"></script>
+    <script src="profile.js"></script>
 </body>
 </html>
