@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | Secure Sync</title>
+    <title>LogLegends | Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="auth-handler.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -25,22 +26,33 @@
                 </div>
             </section>
 
+            <section id="page-checklist" class="page">
+                <div class="page-header" style="justify-content: space-between; display: flex;">
+                    <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
+                    <h3>Pre-Drive Safety</h3>
+                    <button id="complete-checklist-btn" class="verify-btn">VERIFY</button>
+                </div>
+                <div id="checklist-items" class="checklist-grid"></div>
+            </section>
+
             <section id="page-profile" class="page">
                 <div class="page-header"><h3>Driver Profile</h3></div>
                 <div class="profile-card">
-                    <div id="g_id_onload" data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
+                    <div id="g_id_onload" 
+                         data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" 
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
                     <div class="g_id_signin" data-type="standard"></div>
                     
                     <div id="sync-status-area" style="margin-top: 20px; padding: 15px; background: #222; border-radius: 10px; display: none;">
                         <div id="user-info"></div>
-                        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
-                        <p style="font-size: 0.8rem; color: #00e5ff; margin: 0;"> Cloud Sync Active</p>
-                        <p style="font-size: 0.7rem; color: #888; margin-top: 5px;">Last Backup: <span id="sync-time">Never</span></p>
+                        <p style="font-size: 0.8rem; color: #00e5ff; margin: 10px 0 0 0;"> Cloud Sync Active</p>
+                        <p style="font-size: 0.7rem; color: #888;">Last Backup: <span id="sync-time">Never</span></p>
                     </div>
                 </div>
             </section>
-
-            </main>
+        </main>
 
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
@@ -48,7 +60,6 @@
             <button class="nav-item" onclick="showPage('profile')" id="nav-prof"><span></span>Profile</button>
         </nav>
     </div>
-    <script src="auth-handler.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

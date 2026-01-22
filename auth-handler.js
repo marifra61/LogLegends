@@ -21,7 +21,8 @@ window.handleCredentialResponse = async function(response) {
     const statusArea = document.getElementById('sync-status-area');
     if (statusArea) statusArea.style.display = 'block';
     
-    document.getElementById('user-info').innerHTML = `
+    document.querySelector(".g_id_signin").style.display = "none";
+    document.getElementById("user-info").innerHTML = `
         <img src="${payload.picture}" style="border-radius:50%; width:50px; border: 2px solid #00e5ff;">
         <p style="margin: 5px 0 0 0; font-weight: bold; color: white;">${payload.name}</p>
     `;
