@@ -2,9 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LogLegends">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
     <title>LogLegends | Driving Logs</title>
+    
+    <!-- Prevent text size adjustment on mobile -->
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🚗</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🚗</text></svg>">
+    
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="app-container">
@@ -17,11 +33,11 @@
         </div>
 
         <!-- Sync Status Area (hidden until logged in) -->
-        <div id="sync-status-area" style="display:none; position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; z-index: 1000;">
-            <div id="user-info" style="display: flex; align-items: center; gap: 10px;"></div>
-            <div id="sync-time" style="color: #00e5ff; font-size: 0.8rem; margin-top: 5px;"></div>
-            <button onclick="pushToCloud()" style="margin-top: 5px; padding: 5px 10px; background: #00e5ff; border: none; border-radius: 5px; cursor: pointer;">Sync Now</button>
-            <button onclick="logoutUser()" style="margin-top: 5px; padding: 5px 10px; background: #ff4444; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
+        <div id="sync-status-area" style="display:none;">
+            <div id="user-info"></div>
+            <div id="sync-time"></div>
+            <button onclick="pushToCloud()" style="background: #00e5ff; color: #000;">Sync Now</button>
+            <button onclick="logoutUser()" style="background: #ff4444; color: white;">Logout</button>
         </div>
 
         <!-- Dashboard Page -->
@@ -57,29 +73,38 @@
             <button class="start-btn disabled" id="start-drive-btn" disabled>START DRIVE</button>
             
             <div class="map-placeholder">
-                <p>🗺️ Map View</p>
+                <p>🗺️</p>
                 <small>GPS tracking active during drive</small>
             </div>
         </div>
 
         <!-- Checklist Page -->
         <div class="page" id="page-checklist">
-            <h2 style="color: white; text-align: center; margin-bottom: 20px;">Pre-Drive Safety Checklist</h2>
+            <h2 style="color: white; text-align: center; margin-bottom: 25px; font-size: 1.8rem;">Pre-Drive Safety</h2>
             <div id="checklist-container"></div>
-            <button class="verify-btn" id="complete-checklist-btn">VERIFY & ENABLE START</button>
+            <button class="verify-btn" id="complete-checklist-btn">VERIFY</button>
         </div>
 
         <!-- Profile Page -->
         <div class="page" id="page-profile">
-            <h2 style="color: white; text-align: center; margin-bottom: 20px;">Driving Timeline</h2>
+            <h2 style="color: white; text-align: center; margin-bottom: 25px; font-size: 1.8rem;">Trip History</h2>
             <div id="timeline-container"></div>
         </div>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
-            <button class="nav-item" onclick="showPage('checklist')" id="nav-chec"><span></span>Check</button>
-            <button class="nav-item" onclick="showPage('profile')" id="nav-prof"><span></span>Profile</button>
+            <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash" aria-label="Dashboard">
+                <span></span>
+                Dash
+            </button>
+            <button class="nav-item" onclick="showPage('checklist')" id="nav-chec" aria-label="Checklist">
+                <span></span>
+                Check
+            </button>
+            <button class="nav-item" onclick="showPage('profile')" id="nav-prof" aria-label="Profile">
+                <span></span>
+                Trips
+            </button>
         </nav>
     </div>
 
@@ -157,5 +182,16 @@
     <script src="checklist.js"></script>
     <script src="timeline.js"></script>
     <script src="profile.js"></script>
+    
+    <!-- Service Worker for PWA (offline support) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+    </script>
 </body>
 </html>

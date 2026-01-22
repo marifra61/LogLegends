@@ -60,13 +60,21 @@ function syncProfileUI(time) {
 }
 
 // ============================================
-// CLOUD SYNC FUNCTIONS
+// CLOUD SYNC FUNCTIONS WITH TIMEOUT
 // ============================================
 async function pullFromCloud() {
     const uid = localStorage.getItem('log_uid');
     if (!uid) return;
     
-    try {
+    console.log('Attempting to sync from cloud...');
+    
+    // Create a timeout promise (5 seconds)
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Sync timeout')), 5000);
+    });
+    
+    // Create the actual sync promise
+    const syncPromise = (async () => {
         const docRef = doc(db, "users", uid);
         const snap = await getDoc(docRef);
         
@@ -81,12 +89,28 @@ async function pullFromCloud() {
                 if (window.loadDashboard) {
                     window.loadDashboard();
                 }
+                return true;
             }
         } else {
             console.log('No cloud data found, using local data');
+            syncProfileUI('Local Mode');
+            return false;
         }
+    })();
+    
+    // Race between timeout and actual sync
+    try {
+        await Promise.race([syncPromise, timeoutPromise]);
     } catch (error) {
-        console.error('Error pulling from cloud:', error);
+        console.warn('Cloud sync failed or timed out:', error.message);
+        syncProfileUI('Offline Mode');
+        
+        // Show user-friendly message
+        const syncTime = document.getElementById('sync-time');
+        if (syncTime) {
+            syncTime.textContent = 'Offline Mode';
+            syncTime.style.color = '#ff9800';
+        }
     }
 }
 
@@ -97,7 +121,15 @@ window.pushToCloud = async function() {
         return;
     }
     
-    try {
+    console.log('Pushing data to cloud...');
+    
+    // Create a timeout promise (5 seconds)
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Push timeout')), 5000);
+    });
+    
+    // Create the actual push promise
+    const pushPromise = (async () => {
         const statsStr = localStorage.getItem('driving_stats');
         const stats = statsStr ? JSON.parse(statsStr) : {
             totalHours: 0,
@@ -113,10 +145,16 @@ window.pushToCloud = async function() {
             userEmail: localStorage.getItem('log_email') || ''
         }, { merge: true });
         
-        console.log('Data pushed to cloud');
+        console.log('Data pushed to cloud successfully');
         syncProfileUI('Just now');
+    })();
+    
+    // Race between timeout and actual push
+    try {
+        await Promise.race([pushPromise, timeoutPromise]);
     } catch (error) {
-        console.error('Error pushing to cloud:', error);
+        console.warn('Cloud push failed or timed out:', error.message);
+        alert('Could not sync to cloud. Your data is saved locally.');
     }
 };
 
@@ -143,7 +181,13 @@ async function init() {
     if (uid) {
         console.log('User logged in, syncing...');
         syncProfileUI("Syncing...");
-        await pullFromCloud();
+        
+        // Try to sync, but don't block app initialization
+        pullFromCloud().then(() => {
+            console.log('Sync complete');
+        }).catch(err => {
+            console.warn('Sync failed:', err);
+        });
     } else {
         console.log('No user logged in');
     }
