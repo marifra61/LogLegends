@@ -60,3 +60,6 @@ body, html { height: 100dvh; margin: 0; background: var(--bg-dark); color: white
     color: white;
     box-shadow: 0 4px 15px rgba(255, 109, 0, 0.3);
 }
+.page { display: none; flex-direction: column; height: 100%; width: 100%; }
+.page.active { display: flex !important; }
+.action-button:disabled { cursor: not-allowed; pointer-events: none; }
