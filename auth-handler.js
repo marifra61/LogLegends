@@ -14,37 +14,62 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Function to update the UI once logged in
+function updateLoggedInUI(name, picture, timestamp) {
+    const signinBtn = document.querySelector(".g_id_signin");
+    if (signinBtn) signinBtn.style.display = "none";
+    
+    const syncArea = document.getElementById('sync-status-area');
+    if (syncArea) syncArea.style.display = 'block';
+    
+    document.getElementById('user-info').innerHTML = `
+        <img src="${picture}" style="border-radius:50%; width:50px; border: 2px solid #00e5ff;">
+        <p style="margin: 5px 0 0 0; font-weight: bold; color: white;">${name}</p>
+    `;
+    
+    if (timestamp) {
+        document.getElementById('sync-time').textContent = timestamp;
+    }
+}
+
 window.handleCredentialResponse = async function(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    const userId = payload.sub;
+    localStorage.setItem('loglegends_user_id', payload.sub);
+    localStorage.setItem('loglegends_user_name', payload.name);
+    localStorage.setItem('loglegends_user_pic', payload.picture);
 
-    const statusArea = document.getElementById('sync-status-area');
-    if (statusArea) statusArea.style.display = 'block';
-    
-    document.querySelector(".g_id_signin").style.display = "none";
-    document.getElementById("user-info").innerHTML = `
-        <img src="${payload.picture}" style="border-radius:50%; width:50px; border: 2px solid #00e5ff;">
-        <p style="margin: 5px 0 0 0; font-weight: bold; color: white;">${payload.name}</p>
-    `;
-
-    localStorage.setItem('loglegends_user_id', userId);
     await window.syncToCloud();
+    updateLoggedInUI(payload.name, payload.picture, new Date().toLocaleTimeString());
 };
 
 window.syncToCloud = async function() {
     const userId = localStorage.getItem('loglegends_user_id');
-    if (!userId || typeof stats === 'undefined') return;
+    if (!userId) return;
 
     const timestamp = new Date().toLocaleTimeString();
     try {
         await setDoc(doc(db, "users", userId), { 
-            stats: stats,
+            stats: (typeof stats !== 'undefined') ? stats : { total: 0, night: 0, weekly: 0 },
             lastUpdated: timestamp 
         }, { merge: true });
-
-        const timeSpan = document.getElementById('sync-time');
-        if (timeSpan) timeSpan.textContent = timestamp;
+        
+        document.getElementById('sync-time').textContent = timestamp;
     } catch (e) {
         console.error("Sync error:", e);
     }
 };
+
+// AUTO-RESTORE ON LOAD
+window.addEventListener('load', async () => {
+    const savedId = localStorage.getItem('loglegends_user_id');
+    if (savedId) {
+        const name = localStorage.getItem('loglegends_user_name');
+        const pic = localStorage.getItem('loglegends_user_pic');
+        
+        // Fetch latest timestamp from Firebase
+        const docSnap = await getDoc(doc(db, "users", savedId));
+        const cloudTime = docSnap.exists() ? docSnap.data().lastUpdated : "Just now";
+        
+        updateLoggedInUI(name, pic, cloudTime);
+    }
+});
