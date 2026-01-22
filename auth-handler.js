@@ -33,3 +33,29 @@ window.handleCredentialResponse = function(response) {
         picture: responsePayload.picture
     }));
 };
+// Enhanced Cloud Sync with Timestamp
+window.syncToCloud = async function() {
+    const user = JSON.parse(localStorage.getItem('loglegends_user'));
+    if (user && user.id) {
+        const now = new Date();
+        const timestamp = now.toLocaleString();
+        
+        try {
+            await setDoc(doc(db, "users", user.id), { 
+                stats: stats,
+                lastUpdated: timestamp 
+            }, { merge: true });
+
+            // Update UI Indicator
+            const indicator = document.getElementById('sync-indicator');
+            const timeSpan = document.getElementById('sync-time');
+            if (indicator && timeSpan) {
+                indicator.style.display = 'block';
+                timeSpan.textContent = timestamp;
+            }
+            console.log("Cloud Backup Successful at:", timestamp);
+        } catch (error) {
+            console.error("Cloud Sync Failed:", error);
+        }
+    }
+};
