@@ -3,6 +3,9 @@ let driveInterval;
 let startTime;
 let isUnlocked = false; 
 
+// Initial Stats for Compliance Engine
+let stats = { total: 12.5, night: 2.0, weekly: 4.2 }; 
+
 const ChecklistItems = [
     { id: 'mirrors', label: 'Adjust all mirrors', icon: '' },
     { id: 'seatbelt', label: 'Fasten seatbelt', icon: '' },
@@ -17,8 +20,36 @@ const ChecklistItems = [
 window.showPage = function(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${pageId}`).classList.add('active');
-    if(pageId === 'dashboard') refreshDriveButton();
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    if(pageId === 'dashboard') {
+        document.getElementById('nav-dash').classList.add('active');
+        refreshDriveButton();
+    }
+    if(pageId === 'checklist') document.getElementById('nav-check').classList.add('active');
+    if(pageId === 'timeline') {
+        document.getElementById('nav-time').classList.add('active');
+        renderTimeline();
+    }
 };
+
+// Compliance UI Updates
+function updateComplianceUI() {
+    const totalProgress = (stats.total / 60) * 100;
+    document.getElementById('top-total-progress-bar').style.width = `${totalProgress}%`;
+    document.getElementById('total-hours-badge').textContent = `${stats.total.toFixed(1)} / 60h Total`;
+    document.getElementById('top-night-hours-display').textContent = `${stats.night.toFixed(1)}/10h`;
+    document.getElementById('top-weekly-display').textContent = `${stats.weekly.toFixed(1)}/10h WK`;
+}
+
+// Timeline Rendering
+function renderTimeline() {
+    const list = document.getElementById('timeline-list');
+    list.innerHTML = `
+        <div class="timeline-item"><span> Day Drive</span> <b>1.2 hrs</b></div>
+        <div class="timeline-item"><span> Night Drive</span> <b>0.8 hrs</b></div>
+    `;
+}
 
 function refreshDriveButton() {
     const btn = document.getElementById('start-drive-btn');
@@ -27,13 +58,15 @@ function refreshDriveButton() {
         btn.disabled = false;
         btn.style.opacity = "1";
         btn.style.backgroundColor = "#00e5ff";
-        btn.style.pointerEvents = "auto";
         warning.style.display = "none";
     }
 }
 
+window.closePremium = () => document.getElementById('premium-modal').classList.remove('active');
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Render Checklist
+    updateComplianceUI();
+    
     document.getElementById('checklist-items').innerHTML = ChecklistItems.map(item => `
         <div class="checklist-card">
             <input type="checkbox" class="vibe-check" id="c-${item.id}">
@@ -41,18 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     `).join('');
 
-    // Verification Logic
     document.getElementById('complete-checklist-btn').onclick = function() {
-        const checked = document.querySelectorAll('.vibe-check:checked').length;
-        if (checked === 8) {
+        if (document.querySelectorAll('.vibe-check:checked').length === 8) {
             isUnlocked = true;
             window.showPage('dashboard');
         } else {
-            alert(`Please check all items (${checked}/8)`);
+            alert("Please complete all 8 safety checks.");
         }
     };
 
-    // Drive Logic
+    // Freemium Export Trigger
+    document.getElementById('export-pdf-btn').onclick = () => {
+        document.getElementById('premium-modal').classList.add('active');
+    };
+
     const startBtn = document.getElementById('start-drive-btn');
     startBtn.onclick = function() {
         if (this.textContent === "START DRIVE") {
@@ -65,10 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1000);
         } else {
             clearInterval(driveInterval);
+            const hoursEarned = (Date.now() - startTime) / 3600000;
+            stats.total += hoursEarned; // Update Compliance Engine
             isUnlocked = false;
             this.textContent = "START DRIVE";
+            updateComplianceUI();
             refreshDriveButton();
-            alert("Drive session saved!");
+            alert("Drive Session Logged!");
         }
     };
 

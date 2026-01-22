@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | Dashboard</title>
+    <title>LogLegends | Compliance Pro</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
         <div class="top-nav">
             <div class="progress-container"><div id="top-total-progress-bar" class="progress-fill"></div></div>
-            <div class="badge-row"><span id="total-hours-badge">0/60h</span><span id="top-night-hours-display">0/10h</span></div>
+            <div class="badge-row">
+                <span id="total-hours-badge">0/60h Total</span>
+                <span id="top-night-hours-display">0/10h</span>
+                <span id="top-weekly-display">0/10h WK</span>
+            </div>
         </div>
 
         <main id="main-content">
@@ -18,7 +22,7 @@
                 <div id="map-display"></div>
                 <div class="dashboard-panel">
                     <div class="timer-display"><div id="timer">00:00:00</div></div>
-                    <div id="checklist-warning" class="warning-box"> Checklist Required</div>
+                    <div id="checklist-warning" class="warning-box"> Checklist Required to Unlock Drive</div>
                     <button id="start-drive-btn" class="action-button" disabled>START DRIVE</button>
                 </div>
             </section>
@@ -30,11 +34,30 @@
                 </div>
                 <div id="checklist-items" class="checklist-grid"></div>
             </section>
+
+            <section id="page-timeline" class="page">
+                <div class="page-header"><h3>Drive History</h3></div>
+                <div id="timeline-list" class="timeline-container">
+                    </div>
+                <button id="export-pdf-btn" class="action-button secondary">Export DMV-Ready PDF</button>
+            </section>
         </main>
+
+        <div id="premium-modal" class="modal">
+            <div class="modal-content">
+                <h2>Go Premium </h2>
+                <p>Exporting DMV-certified PDF logs is a premium feature.</p>
+                <div class="modal-btns">
+                    <button onclick="closePremium()" class="back-btn">Later</button>
+                    <button class="verify-btn" onclick="alert('Payment Gateway Coming Soon!')">Upgrade</button>
+                </div>
+            </div>
+        </div>
 
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
             <button class="nav-item" onclick="showPage('checklist')" id="nav-check"><span></span>Checklist</button>
+            <button class="nav-item" onclick="showPage('timeline')" id="nav-time"><span></span>History</button>
         </nav>
     </div>
     <script src="app.js"></script>

@@ -94,3 +94,9 @@ body, html { height: 100dvh; margin: 0; background: var(--bg-dark); color: white
 }
 #page-checklist { overflow-y: scroll; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
 .checklist-grid { padding-top: 10px; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
+.modal.active { display: flex; }
+.modal-content { background: #1a1a1a; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid var(--accent-orange); width: 85%; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+.timeline-item { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 4px solid var(--accent-cyan); }
+.action-button.secondary { background: var(--accent-orange); color: white; margin-top: 15px; }
