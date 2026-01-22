@@ -1,7 +1,5 @@
-﻿// LogLegends Unified App Logic
-let map;
+﻿let map;
 
-// 1. The Global Callback for Google Maps
 window.initMap = function() {
     console.log("Google Maps Script loaded. Initializing map...");
     map = new google.maps.Map(document.getElementById("map-display"), {
@@ -15,9 +13,9 @@ window.initMap = function() {
     });
 };
 
-// 2. Load the Script with your Restricted Key
 function loadGoogleMaps() {
-    const apiKey = "PASTE_YOUR_KEY_FROM_LEAD_FINDER_PRO"; 
+    // Ensure your key is inside the " " quotes below
+    const apiKey = "AIzaSyB1DACu4yoRMzIdvo0USYc-Gg4vtRvEDZk"; 
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
     script.async = true;
@@ -25,7 +23,6 @@ function loadGoogleMaps() {
     document.head.appendChild(script);
 }
 
-// 3. Start the App
 document.addEventListener('DOMContentLoaded', () => {
     console.log("LogLegends Dashboard Ready");
     loadGoogleMaps();
