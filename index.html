@@ -3,27 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | Compliance Dashboard</title>
+    <title>LogLegends | Profile</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div id="app-container">
         <div class="top-nav metrics-grid">
-            <div class="metric-item">
-                <label>TOTAL (60h)</label>
-                <div class="bar-bg"><div id="bar-total" class="bar-fill cyan"></div></div>
-                <span id="txt-total">0.0h</span>
-            </div>
-            <div class="metric-item">
-                <label>NIGHT (10h)</label>
-                <div class="bar-bg"><div id="bar-night" class="bar-fill orange"></div></div>
-                <span id="txt-night">0.0h</span>
-            </div>
-            <div class="metric-item">
-                <label>WEEKLY CAP</label>
-                <div class="bar-bg"><div id="bar-weekly" class="bar-fill green"></div></div>
-                <span id="txt-weekly">0.0h</span>
-            </div>
+            <div class="metric-item"><label>TOTAL (60h)</label><div class="bar-bg"><div id="bar-total" class="bar-fill cyan"></div></div><span id="txt-total">0.0h</span></div>
+            <div class="metric-item"><label>NIGHT (10h)</label><div class="bar-bg"><div id="bar-night" class="bar-fill orange"></div></div><span id="txt-night">0.0h</span></div>
+            <div class="metric-item"><label>WEEKLY CAP</label><div class="bar-bg"><div id="bar-weekly" class="bar-fill green"></div></div><span id="txt-weekly">0.0h</span></div>
         </div>
 
         <main id="main-content">
@@ -49,23 +38,27 @@
                 <div id="timeline-list"></div>
                 <button id="export-pdf-btn" class="action-button secondary">Export DMV-Ready PDF</button>
             </section>
-        </main>
 
-        <div id="premium-modal" class="modal">
-            <div class="modal-content">
-                <h2>Go Premium </h2>
-                <p>PDF Exporting is a Premium Feature.</p>
-                <div class="modal-btns">
-                    <button onclick="closePremium()" class="back-btn">Later</button>
-                    <button class="verify-btn" onclick="alert('Feature coming soon!')">Upgrade</button>
+            <section id="page-profile" class="page">
+                <div class="page-header"><h3>Driver Profile</h3></div>
+                <div class="profile-card">
+                    <div id="g_id_onload"
+                         data-client_id="PASTE_YOUR_CLIENT_ID_HERE"
+                         data-callback="handleCredentialResponse">
+                    </div>
+                    <div class="g_id_signin" data-type="standard"></div>
+                    <div id="user-info" style="margin-top: 20px;">
+                        <p id="user-status">Please sign in to save your 60-hour progress.</p>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
 
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
-            <button class="nav-item" onclick="showPage('checklist')" id="nav-check"><span></span>Checklist</button>
-            <button class="nav-item" onclick="showPage('timeline')" id="nav-time"><span></span>History</button>
+            <button class="nav-item" onclick="showPage('checklist')" id="nav-check"><span></span>Check</button>
+            <button class="nav-item" onclick="showPage('timeline')" id="nav-time"><span></span>Logs</button>
+            <button class="nav-item" onclick="showPage('profile')" id="nav-prof"><span></span>Profile</button>
         </nav>
     </div>
     <script src="app.js"></script>

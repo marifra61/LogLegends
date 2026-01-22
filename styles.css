@@ -109,3 +109,15 @@ body, html { height: 100dvh; margin: 0; background: var(--bg-dark); color: white
 .bar-fill.orange { background: var(--accent-orange); box-shadow: 0 0 8px var(--accent-orange); }
 .bar-fill.green { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
 .metric-item span { font-size: 0.7rem; font-weight: bold; color: white; margin-top: 2px; }
+.profile-card {
+    background: #1a1a1a;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid #333;
+    margin-top: 20px;
+}
+#user-status img {
+    border: 3px solid var(--accent-cyan);
+    margin-bottom: 10px;
+}
