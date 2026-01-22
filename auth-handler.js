@@ -14,24 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Function to update the UI once logged in
-function updateLoggedInUI(name, picture, timestamp) {
-    const signinBtn = document.querySelector(".g_id_signin");
-    if (signinBtn) signinBtn.style.display = "none";
-    
-    const syncArea = document.getElementById('sync-status-area');
-    if (syncArea) syncArea.style.display = 'block';
-    
-    document.getElementById('user-info').innerHTML = `
-        <img src="${picture}" style="border-radius:50%; width:50px; border: 2px solid #00e5ff;">
-        <p style="margin: 5px 0 0 0; font-weight: bold; color: white;">${name}</p>
-    `;
-    
-    if (timestamp) {
-        document.getElementById('sync-time').textContent = timestamp;
-    }
-}
-
+// 1. Make the callback GLOBAL so Google can find it
 window.handleCredentialResponse = async function(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     localStorage.setItem('loglegends_user_id', payload.sub);
@@ -42,34 +25,61 @@ window.handleCredentialResponse = async function(response) {
     updateLoggedInUI(payload.name, payload.picture, new Date().toLocaleTimeString());
 };
 
+// 2. The UI Update Engine
+function updateLoggedInUI(name, picture, timestamp) {
+    const signinBtn = document.querySelector(".g_id_signin");
+    const syncArea = document.getElementById('sync-status-area');
+    const userInfo = document.getElementById('user-info');
+    const timeSpan = document.getElementById('sync-time');
+
+    if (signinBtn) signinBtn.style.display = "none";
+    if (syncArea) syncArea.style.display = "block";
+    if (userInfo) {
+        userInfo.innerHTML = `
+            <img src="${picture}" style="border-radius:50%; width:50px; border: 2px solid #00e5ff;">
+            <p style="margin: 5px 0 0 0; font-weight: bold; color: white;">${name}</p>
+        `;
+    }
+    if (timeSpan && timestamp) timeSpan.textContent = timestamp;
+}
+
+// 3. The Cloud Sync Engine
 window.syncToCloud = async function() {
     const userId = localStorage.getItem('loglegends_user_id');
     if (!userId) return;
 
     const timestamp = new Date().toLocaleTimeString();
     try {
+        // Use a fallback if 'stats' isn't defined yet
+        const currentStats = (typeof stats !== 'undefined') ? stats : { total: 0, night: 0, weekly: 0 };
         await setDoc(doc(db, "users", userId), { 
-            stats: (typeof stats !== 'undefined') ? stats : { total: 0, night: 0, weekly: 0 },
+            stats: currentStats,
             lastUpdated: timestamp 
         }, { merge: true });
         
-        document.getElementById('sync-time').textContent = timestamp;
+        const timeSpan = document.getElementById('sync-time');
+        if (timeSpan) timeSpan.textContent = timestamp;
     } catch (e) {
-        console.error("Sync error:", e);
+        console.error("Firebase Sync Error:", e);
     }
 };
 
-// AUTO-RESTORE ON LOAD
-window.addEventListener('load', async () => {
+// 4. Run Restore immediately
+async function restoreSession() {
     const savedId = localStorage.getItem('loglegends_user_id');
     if (savedId) {
         const name = localStorage.getItem('loglegends_user_name');
         const pic = localStorage.getItem('loglegends_user_pic');
+        updateLoggedInUI(name, pic, "Connecting...");
         
-        // Fetch latest timestamp from Firebase
-        const docSnap = await getDoc(doc(db, "users", savedId));
-        const cloudTime = docSnap.exists() ? docSnap.data().lastUpdated : "Just now";
-        
-        updateLoggedInUI(name, pic, cloudTime);
+        try {
+            const docSnap = await getDoc(doc(db, "users", savedId));
+            if (docSnap.exists()) {
+                updateLoggedInUI(name, pic, docSnap.data().lastUpdated);
+            }
+        } catch (e) {
+            console.error("Session Restore Error:", e);
+        }
     }
-});
+}
+restoreSession();
