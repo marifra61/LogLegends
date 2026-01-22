@@ -1,4 +1,5 @@
-﻿let map;
+﻿setTimeout(() => { 
+let map;
 let driveInterval;
 let startTime;
 let isUnlocked = false;
@@ -118,3 +119,5 @@ window.initMap = () => {
         styles: [{ "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }]
     });
 };
+
+ }, 500);

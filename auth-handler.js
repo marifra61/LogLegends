@@ -13,24 +13,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function renderUI() {
+// FORCE UI TO SHOW LOGGED IN STATE
+function renderLoggedInUI() {
     const uid = localStorage.getItem('loglegends_user_id');
     if (!uid) return;
 
     const area = document.getElementById('sync-status-area');
     const btn = document.querySelector(".g_id_signin");
-    const name = localStorage.getItem('loglegends_user_name');
-    const pic = localStorage.getItem('loglegends_user_pic');
-
     if (area) area.style.setProperty('display', 'block', 'important');
     if (btn) btn.style.display = "none";
     
+    const name = localStorage.getItem('loglegends_user_name');
+    const pic = localStorage.getItem('loglegends_user_pic');
     const info = document.getElementById('user-info');
     if (info) {
-        info.innerHTML = `
-            <img src="${pic}" style="border-radius:50%; width:45px; border:2px solid #00e5ff;">
-            <p style="color:white; margin:5px 0; font-weight:bold;">${name}</p>
-        `;
+        info.innerHTML = `<img src="${pic}" style="border-radius:50%; width:45px; border:2px solid #00e5ff;"><p style="color:white; font-weight:bold;">${name}</p>`;
     }
 }
 
@@ -40,26 +37,36 @@ window.handleCredentialResponse = async (response) => {
     localStorage.setItem('loglegends_user_name', payload.name);
     localStorage.setItem('loglegends_user_pic', payload.picture);
     
-    renderUI();
+    renderLoggedInUI();
     await window.syncToCloud();
+    location.reload(); // Refresh once to let app.js grab the new cloud stats
 };
 
 window.syncToCloud = async () => {
     const uid = localStorage.getItem('loglegends_user_id');
     if (!uid) return;
     const stats = JSON.parse(localStorage.getItem('driving_stats')) || {total:0, night:0, weekly:0};
-    const time = new Date().toLocaleTimeString();
     try {
+        const time = new Date().toLocaleTimeString();
         await setDoc(doc(db, "users", uid), { stats, lastUpdated: time }, { merge: true });
-        const timeEl = document.getElementById('sync-time');
-        if (timeEl) timeEl.textContent = time;
+        if (document.getElementById('sync-time')) document.getElementById('sync-time').textContent = time;
     } catch (e) { console.error(e); }
 };
 
-// PERSISTENCE LOOP: Checks 5 times over 5 seconds to ensure UI stays active
-let checkCount = 0;
-const persistenceInterval = setInterval(() => {
-    renderUI();
-    checkCount++;
-    if (checkCount > 5) clearInterval(persistenceInterval);
-}, 1000);
+// AUTO-RESTORE ON STARTUP
+(async () => {
+    const uid = localStorage.getItem('loglegends_user_id');
+    if (uid) {
+        renderLoggedInUI();
+        try {
+            const docSnap = await getDoc(doc(db, "users", uid));
+            if (docSnap.exists()) {
+                const cloudData = docSnap.data();
+                // OVERWRITE LOCAL STATS WITH CLOUD STATS BEFORE APP.JS RUNS
+                localStorage.setItem('driving_stats', JSON.stringify(cloudData.stats));
+                if (document.getElementById('sync-time')) document.getElementById('sync-time').textContent = cloudData.lastUpdated;
+                console.log("Cloud data restored successfully.");
+            }
+        } catch (e) { console.error("Restore failed:", e); }
+    }
+})();
