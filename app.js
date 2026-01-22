@@ -1,9 +1,9 @@
 ﻿let map;
 let driveInterval;
 let startTime;
-let isUnlocked = false; 
+let isUnlocked = false;
 
-// Initial Stats for Compliance Engine
+// Mock Persistence State
 let stats = { total: 12.5, night: 2.0, weekly: 4.2 }; 
 
 const ChecklistItems = [
@@ -21,71 +21,43 @@ window.showPage = function(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${pageId}`).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
     if(pageId === 'dashboard') {
         document.getElementById('nav-dash').classList.add('active');
         refreshDriveButton();
-    }
-    if(pageId === 'checklist') document.getElementById('nav-check').classList.add('active');
-    if(pageId === 'timeline') {
+    } else if(pageId === 'timeline') {
         document.getElementById('nav-time').classList.add('active');
-        renderTimeline();
     }
 };
 
-// Compliance UI Updates
 function updateComplianceUI() {
-    const totalProgress = (stats.total / 60) * 100;
-    document.getElementById('top-total-progress-bar').style.width = `${totalProgress}%`;
-    document.getElementById('total-hours-badge').textContent = `${stats.total.toFixed(1)} / 60h Total`;
-    document.getElementById('top-night-hours-display').textContent = `${stats.night.toFixed(1)}/10h`;
-    document.getElementById('top-weekly-display').textContent = `${stats.weekly.toFixed(1)}/10h WK`;
+    // Update Progress Bars
+    document.getElementById('bar-total').style.width = `${Math.min((stats.total / 60) * 100, 100)}%`;
+    document.getElementById('bar-night').style.width = `${Math.min((stats.night / 10) * 100, 100)}%`;
+    document.getElementById('bar-weekly').style.width = `${Math.min((stats.weekly / 10) * 100, 100)}%`;
+
+    // Update Text Labels
+    document.getElementById('txt-total').textContent = `${stats.total.toFixed(1)}h`;
+    document.getElementById('txt-night').textContent = `${stats.night.toFixed(1)}h`;
+    document.getElementById('txt-weekly').textContent = `${stats.weekly.toFixed(1)}h`;
 }
 
-// Timeline Rendering
-function renderTimeline() {
-    const list = document.getElementById('timeline-list');
-    list.innerHTML = `
-        <div class="timeline-item"><span> Day Drive</span> <b>1.2 hrs</b></div>
-        <div class="timeline-item"><span> Night Drive</span> <b>0.8 hrs</b></div>
-    `;
+// Auto-Night Logic
+function isNightTime() {
+    const hour = new Date().getHours();
+    return hour >= 18 || hour < 6; // 6 PM to 6 AM
 }
-
-function refreshDriveButton() {
-    const btn = document.getElementById('start-drive-btn');
-    const warning = document.getElementById('checklist-warning');
-    if (isUnlocked) {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.backgroundColor = "#00e5ff";
-        warning.style.display = "none";
-    }
-}
-
-window.closePremium = () => document.getElementById('premium-modal').classList.remove('active');
 
 document.addEventListener('DOMContentLoaded', () => {
     updateComplianceUI();
-    
     document.getElementById('checklist-items').innerHTML = ChecklistItems.map(item => `
-        <div class="checklist-card">
-            <input type="checkbox" class="vibe-check" id="c-${item.id}">
-            <label for="c-${item.id}">${item.icon} ${item.label}</label>
-        </div>
+        <div class="checklist-card"><input type="checkbox" class="vibe-check" id="c-${item.id}"><label for="c-${item.id}">${item.icon} ${item.label}</label></div>
     `).join('');
 
     document.getElementById('complete-checklist-btn').onclick = function() {
         if (document.querySelectorAll('.vibe-check:checked').length === 8) {
             isUnlocked = true;
             window.showPage('dashboard');
-        } else {
-            alert("Please complete all 8 safety checks.");
-        }
-    };
-
-    // Freemium Export Trigger
-    document.getElementById('export-pdf-btn').onclick = () => {
-        document.getElementById('premium-modal').classList.add('active');
+        } else { alert("Complete all 8 items."); }
     };
 
     const startBtn = document.getElementById('start-drive-btn');
@@ -101,12 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             clearInterval(driveInterval);
             const hoursEarned = (Date.now() - startTime) / 3600000;
-            stats.total += hoursEarned; // Update Compliance Engine
+            
+            // Auto-Attribution
+            stats.total += hoursEarned;
+            stats.weekly += hoursEarned;
+            if (isNightTime()) {
+                stats.night += hoursEarned;
+                console.log("Night hours automatically attributed.");
+            }
+
             isUnlocked = false;
             this.textContent = "START DRIVE";
             updateComplianceUI();
             refreshDriveButton();
-            alert("Drive Session Logged!");
         }
     };
 
@@ -115,6 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
     document.head.appendChild(script);
 });
+
+function refreshDriveButton() {
+    const btn = document.getElementById('start-drive-btn');
+    const warning = document.getElementById('checklist-warning');
+    if (isUnlocked) {
+        btn.disabled = false; btn.style.opacity = "1"; btn.style.backgroundColor = "#00e5ff"; warning.style.display = "none";
+    }
+}
 
 window.initMap = () => {
     map = new google.maps.Map(document.getElementById("map-display"), {
