@@ -30,7 +30,7 @@ function initializeChecklist() {
     console.log('Checklist initialized with', checklistItems.length, 'items');
 }
 
-// Validate all checkboxes are checked
+// Validate all checkboxes are checked - FIXED VERSION
 window.validateChecklist = function() {
     const allCheckboxes = document.querySelectorAll('.safety-checkbox');
     const checkedCount = document.querySelectorAll('.safety-checkbox:checked').length;
@@ -38,7 +38,10 @@ window.validateChecklist = function() {
     console.log(`Checked: ${checkedCount}/${allCheckboxes.length}`);
     
     if (checkedCount === allCheckboxes.length) {
-        // Enable the start button
+        // Mark checklist as complete
+        localStorage.setItem('safety_check_complete', 'true');
+        
+        // Enable the start button IMMEDIATELY
         const startBtn = document.getElementById('start-drive-btn');
         const safetyStatus = document.getElementById('safety-status');
         
@@ -46,15 +49,13 @@ window.validateChecklist = function() {
             startBtn.disabled = false;
             startBtn.classList.remove('disabled');
             startBtn.classList.add('enabled');
+            console.log('Start button enabled');
         }
         
         if (safetyStatus) {
             safetyStatus.textContent = '✓ Safety Check Complete';
             safetyStatus.style.background = 'linear-gradient(90deg, #00e676, #00c853)';
         }
-        
-        // Mark checklist as complete
-        localStorage.setItem('safety_check_complete', 'true');
         
         alert('✓ Safety check complete! You can now start your drive from the Dashboard.');
         
@@ -63,13 +64,52 @@ window.validateChecklist = function() {
             window.showPage('dashboard');
         }
     } else {
-        alert(`Please complete all ${allCheckboxes.length} safety checks before proceeding.`);
+        alert(`Please complete all ${allCheckboxes.length} safety checks.\nYou have ${checkedCount} of ${allCheckboxes.length} checked.`);
     }
 };
 
+// Re-attach event listener to the verify button
+function attachVerifyListener() {
+    const verifyBtn = document.getElementById('complete-checklist-btn');
+    if (verifyBtn) {
+        // Remove any existing listeners
+        const newBtn = verifyBtn.cloneNode(true);
+        verifyBtn.parentNode.replaceChild(newBtn, verifyBtn);
+        
+        // Add fresh listener
+        newBtn.addEventListener('click', function() {
+            console.log('Verify button clicked');
+            if (window.validateChecklist) {
+                window.validateChecklist();
+            }
+        });
+        
+        console.log('Verify button listener attached');
+    }
+}
+
 // Initialize when page loads
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeChecklist);
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeChecklist();
+        attachVerifyListener();
+    });
 } else {
     initializeChecklist();
+    attachVerifyListener();
 }
+
+// Re-attach when navigating to checklist page
+const originalShowPage = window.showPage;
+window.showPage = function(pageId) {
+    if (originalShowPage) {
+        originalShowPage(pageId);
+    }
+    
+    if (pageId === 'checklist') {
+        setTimeout(function() {
+            initializeChecklist();
+            attachVerifyListener();
+        }, 100);
+    }
+};

@@ -32,7 +32,7 @@ window.showPage = function(pageId) {
 };
 
 // ============================================
-// UI SYNC FUNCTION
+// UI SYNC FUNCTION - IMPROVED
 // ============================================
 function syncProfileUI(time) {
     const uid = localStorage.getItem('log_uid');
@@ -42,7 +42,14 @@ function syncProfileUI(time) {
     if (loginBtn) loginBtn.style.display = 'none';
     
     const syncArea = document.getElementById('sync-status-area');
-    if (syncArea) syncArea.style.display = 'block';
+    if (syncArea) {
+        syncArea.style.display = 'block';
+        // Start collapsed by default
+        if (!syncArea.dataset.initialized) {
+            syncArea.classList.add('collapsed');
+            syncArea.dataset.initialized = 'true';
+        }
+    }
     
     const userInfo = document.getElementById('user-info');
     if (userInfo) {
@@ -56,7 +63,16 @@ function syncProfileUI(time) {
     }
     
     const syncTime = document.getElementById('sync-time');
-    if (syncTime) syncTime.textContent = time || "Active";
+    if (syncTime) {
+        syncTime.textContent = time || "Active";
+        
+        // Color based on sync status
+        if (time === 'Offline Mode') {
+            syncTime.style.color = '#ff9800';
+        } else {
+            syncTime.style.color = '#00e5ff';
+        }
+    }
 }
 
 // ============================================
@@ -104,13 +120,6 @@ async function pullFromCloud() {
     } catch (error) {
         console.warn('Cloud sync failed or timed out:', error.message);
         syncProfileUI('Offline Mode');
-        
-        // Show user-friendly message
-        const syncTime = document.getElementById('sync-time');
-        if (syncTime) {
-            syncTime.textContent = 'Offline Mode';
-            syncTime.style.color = '#ff9800';
-        }
     }
 }
 
@@ -122,6 +131,9 @@ window.pushToCloud = async function() {
     }
     
     console.log('Pushing data to cloud...');
+    
+    // Show syncing status
+    syncProfileUI('Syncing...');
     
     // Create a timeout promise (5 seconds)
     const timeoutPromise = new Promise((_, reject) => {
@@ -147,6 +159,7 @@ window.pushToCloud = async function() {
         
         console.log('Data pushed to cloud successfully');
         syncProfileUI('Just now');
+        alert('✓ Data synced to cloud!');
     })();
     
     // Race between timeout and actual push
@@ -154,7 +167,8 @@ window.pushToCloud = async function() {
         await Promise.race([pushPromise, timeoutPromise]);
     } catch (error) {
         console.warn('Cloud push failed or timed out:', error.message);
-        alert('Could not sync to cloud. Your data is saved locally.');
+        syncProfileUI('Offline Mode');
+        alert('⚠ Could not sync to cloud. Your data is saved locally.');
     }
 };
 
