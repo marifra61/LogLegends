@@ -1,46 +1,25 @@
-// map.js - The GPS Engine for LogLegends
-
-let map;
-let watchId;
-
+﻿let map;
 export function initLogLegendsMap() {
-    // In a Vite/Vibe environment, use import.meta.env
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-    if (!apiKey) {
-        console.error("Vibe Check Failed: Google Maps API Key missing from .env");
-        return;
-    }
-
-    // Load the Google Maps Script dynamically
+    // Paste the key from your 'Lead Finder Pro' project here
+    const apiKey = "AIzaSyB1DACu4yoRMzIdvo0USYc-Gg4vtRvEDZk"; 
+    
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=startTracking`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
     script.async = true;
     document.head.appendChild(script);
 }
 
-window.startTracking = () => {
+window.initMap = () => {
     map = new google.maps.Map(document.getElementById("map-display"), {
-        center: { lat: 35.584, lng: -78.800 }, // Default to Fuquay-Varina area
+        center: { lat: 35.584, lng: -78.800 }, // Fuquay-Varina center
         zoom: 15,
-        styles: [ /* Add your 'Bold & Bright' custom styles here */ ]
+        disableDefaultUI: true,
+        styles: [
+            { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
+            { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
+            { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] },
+            { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] }
+        ]
     });
-
-    console.log("Antigravity Map Initialized.");
+    console.log("LogLegends Map Initialized.");
 };
-
-export function startDriveSession() {
-    if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                const pos = { lat: latitude, lng: longitude };
-                
-                map.setCenter(pos);
-                // logic to save to storage.js goes here
-            },
-            (error) => console.error("GPS Error:", error),
-            { enableHighAccuracy: true }
-        );
-    }
-}
