@@ -3,26 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends</title>
+    <title>LogLegends | AntiGravity</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
         <div class="top-nav">
             <div class="progress-container"><div id="top-total-progress-bar" class="progress-fill"></div></div>
-            <div class="badge-row"><span id="total-hours-badge">0/60h</span><span id="top-night-hours-display">0/10h</span></div>
-        </div>
-        <div id="map-display"></div>
-        <div class="dashboard-panel">
-            <div id="checklist-section">
-                <div class="checklist-header">Safety Check</div>
-                <div class="checklist-item"><input type="checkbox" id="check-mirrors" class="vibe-check"><label>Mirrors</label></div>
-                <div class="checklist-item"><input type="checkbox" id="check-belt" class="vibe-check"><label>Seatbelt</label></div>
-                <div class="checklist-item" style="grid-column: span 2;"><input type="checkbox" id="check-phone" class="vibe-check"><label>Phone Mounted & DND</label></div>
+            <div class="badge-row">
+                <span id="total-hours-badge">0/60h</span>
+                <span id="top-night-hours-display">0/10h</span>
             </div>
-            <div class="timer-display"><div id="timer">00:00:00</div></div>
-            <button id="start-drive-btn" class="action-button" disabled style="opacity: 0.5;">START DRIVE</button>
         </div>
+
+        <main id="main-content">
+            <section id="page-dashboard" class="page active">
+                <div id="map-display"></div>
+                <div class="dashboard-panel">
+                    <div class="timer-display"><div id="timer">00:00:00</div></div>
+                    <div id="checklist-warning" class="warning-box"> Complete Safety Checklist to unlock drive</div>
+                    <button id="start-drive-btn" class="action-button" disabled>START DRIVE</button>
+                </div>
+            </section>
+
+            <section id="page-checklist" class="page">
+                <div class="page-header"><h3>Safety Checklist</h3></div>
+                <div id="checklist-items" class="checklist-grid"></div>
+                <button id="complete-checklist-btn" class="action-button">Verify All Checks</button>
+            </section>
+
+            <section id="page-timeline" class="page">
+                <div class="page-header"><h3>Drive History</h3></div>
+                <div id="timeline-list" class="timeline-container"></div>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-page="dashboard"><span></span>Dashboard</button>
+            <button class="nav-item" data-page="checklist"><span></span>Checklist</button>
+            <button class="nav-item" data-page="timeline"><span></span>History</button>
+            <button class="nav-item" data-page="profile"><span></span>Profile</button>
+        </nav>
     </div>
     <script src="app.js"></script>
 </body>

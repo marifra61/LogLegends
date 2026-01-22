@@ -1,26 +1,34 @@
-﻿// LogLegends Global Engine
+﻿// LogLegends Integrated Engine
 let map;
-let driveInterval;
 let startTime;
+let driveInterval;
 
-// 1. Storage Logic (Embedded)
-const Storage = {
-    init() {
-        if (!localStorage.getItem('loglegends_data')) {
-            localStorage.setItem('loglegends_data', JSON.stringify({
-                profile: { totalHours: 0, goal: 60, nightHours: 0, nightGoal: 10 },
-                drives: []
-            }));
-        }
-    },
-    saveDrive(hours) {
-        const data = JSON.parse(localStorage.getItem('loglegends_data'));
-        data.profile.totalHours += hours;
-        localStorage.setItem('loglegends_data', JSON.stringify(data));
-    }
-};
+const ChecklistData = [
+    { id: 'mirrors', label: 'Mirrors Adjusted', icon: '' },
+    { id: 'seatbelt', label: 'Seatbelt Fastened', icon: '' },
+    { id: 'phone', label: 'Phone Mounted', icon: '' },
+    { id: 'lights', label: 'Lights Checked', icon: '' }
+];
 
-// 2. Map Initialization
+// Navigation Logic
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`page-${pageId}`).classList.add('active');
+    document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+}
+
+// Checklist Rendering (From checklist.js)
+function renderChecklist() {
+    const container = document.getElementById('checklist-items');
+    container.innerHTML = ChecklistData.map(item => `
+        <div class="checklist-card">
+            <input type="checkbox" id="check-${item.id}" class="vibe-check">
+            <label for="check-${item.id}">${item.icon} ${item.label}</label>
+        </div>
+    `).join('');
+}
+
 window.initMap = function() {
     map = new google.maps.Map(document.getElementById("map-display"), {
         center: { lat: 35.584, lng: -78.800 }, 
@@ -30,61 +38,33 @@ window.initMap = function() {
     });
 };
 
-// 3. Logic to unlock the button
-function toggleChecklist() {
-    const m = document.getElementById('check-mirrors').checked;
-    const b = document.getElementById('check-belt').checked;
-    const p = document.getElementById('check-phone').checked;
-    const btn = document.getElementById('start-drive-btn');
-    
-    if (m && b && p) {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.backgroundColor = "#00e5ff"; 
-        console.log("Checklist complete. Button unlocked.");
-    } else {
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-        btn.style.backgroundColor = "#333";
-    }
-}
-
-// 4. App Start
 document.addEventListener('DOMContentLoaded', () => {
-    Storage.init();
+    renderChecklist();
     
-    // Load Google Maps
+    // Page Swapping Listeners
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => showPage(btn.dataset.page));
+    });
+
+    // Start Drive Unlock Logic (From dashboard.js)
+    document.getElementById('complete-checklist-btn').addEventListener('click', () => {
+        const checks = document.querySelectorAll('.vibe-check');
+        const allChecked = Array.from(checks).every(c => c.checked);
+        
+        if (allChecked) {
+            document.getElementById('start-drive-btn').disabled = false;
+            document.getElementById('start-drive-btn').style.opacity = "1";
+            document.getElementById('checklist-warning').style.display = "none";
+            alert(" Safety Checks Complete. Returning to Dashboard.");
+            showPage('dashboard');
+        } else {
+            alert(" Please complete all safety checks first!");
+        }
+    });
+
+    // Map Loader
     const apiKey = "AIzaSyB1DACu4yoRMzIdvo0USYc-Gg4vtRvEDZk"; 
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
     document.head.appendChild(script);
-
-    // Link Checkboxes
-    document.getElementById('check-mirrors').onchange = toggleChecklist;
-    document.getElementById('check-belt').onchange = toggleChecklist;
-    document.getElementById('check-phone').onchange = toggleChecklist;
-
-    // Button Click Handler
-    const startBtn = document.getElementById('start-drive-btn');
-    startBtn.onclick = function() {
-        if (startBtn.textContent === "START DRIVE") {
-            startBtn.textContent = "STOP DRIVE";
-            startBtn.style.backgroundColor = "#ff4444";
-            startTime = Date.now();
-            driveInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                const hrs = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-                const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-                const secs = String(elapsed % 60).padStart(2, '0');
-                document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
-            }, 1000);
-        } else {
-            clearInterval(driveInterval);
-            const finalHours = (Date.now() - startTime) / 3600000;
-            Storage.saveDrive(finalHours);
-            startBtn.textContent = "START DRIVE";
-            startBtn.style.backgroundColor = "#00e5ff";
-            alert("Drive session saved!");
-        }
-    };
 });

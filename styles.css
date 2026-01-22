@@ -1,66 +1,46 @@
 ﻿:root {
-    --bg-dark: #0f0f0f;
+    --bg-dark: #0a0a0a;
+    --card-bg: #1a1a1a;
     --accent-orange: #ff6d00;
     --accent-cyan: #00e5ff;
 }
 
-body, html { 
-    height: 100dvh; 
-    margin: 0; 
-    background: var(--bg-dark); 
-    overflow: hidden; 
-    position: fixed;
-    width: 100%;
-}
-
+body, html { height: 100dvh; margin: 0; background: var(--bg-dark); color: white; font-family: sans-serif; overflow: hidden; }
 #app-container { display: flex; flex-direction: column; height: 100%; }
 
-.top-nav { height: 50px; background: #1a1a1a; padding: 5px 15px; border-bottom: 1px solid #333; z-index: 10; }
+.page { display: none; height: 100%; flex-direction: column; padding: 20px; }
+.page.active { display: flex; }
 
-/* Further reduced map to 25% to prioritize the checklist */
-#map-display { height: 25dvh; width: 100%; }
+#map-display { height: 35dvh; border-radius: 15px; margin-bottom: 15px; }
 
-.dashboard-panel {
-    flex: 1;
-    background: #000;
-    padding: 10px 15px env(safe-area-inset-bottom);
-    border-top: 2px solid var(--accent-orange);
+/* Bottom Navigation */
+.bottom-nav {
+    height: 70px;
+    background: #111;
     display: flex;
-    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #333;
+    padding-bottom: env(safe-area-inset-bottom);
 }
-
-/* Grid layout for checklist items to save 50% vertical space */
-#checklist-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 10px;
+.nav-item {
+    background: none; border: none; color: #888;
+    display: flex; flex-direction: column; align-items: center; font-size: 0.7rem;
 }
+.nav-item.active { color: var(--accent-cyan); }
+.nav-item span { font-size: 1.4rem; margin-bottom: 2px; }
 
-.checklist-header { grid-column: span 2; color: var(--accent-cyan); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; }
-
-.checklist-item { 
-    background: #1a1a1a;
-    padding: 8px;
-    border-radius: 8px;
+/* Checklist Cards */
+.checklist-grid { display: grid; gap: 10px; margin-top: 20px; }
+.checklist-card {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    color: white;
+    gap: 15px;
+    border: 1px solid #333;
 }
+.vibe-check { width: 25px; height: 25px; accent-color: var(--accent-orange); }
 
-.vibe-check { width: 18px; height: 18px; accent-color: var(--accent-orange); }
-
-.timer-display { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--accent-orange); font-weight: 800; }
-
-.action-button {
-    width: 100%;
-    height: 60px;
-    background: var(--accent-cyan);
-    border: none;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: black;
-}
+.warning-box { background: rgba(255, 109, 0, 0.1); color: var(--accent-orange); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
