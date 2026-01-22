@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | Secure Drive</title>
+    <title>LogLegends | Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -18,25 +18,23 @@
                 <div id="map-display"></div>
                 <div class="dashboard-panel">
                     <div class="timer-display"><div id="timer">00:00:00</div></div>
-                    <div id="checklist-warning" class="warning-box"> Complete Checklist to Unlock Start Button</div>
+                    <div id="checklist-warning" class="warning-box"> Checklist Required</div>
                     <button id="start-drive-btn" class="action-button" disabled>START DRIVE</button>
                 </div>
             </section>
 
             <section id="page-checklist" class="page">
-                <div class="page-header">
+                <div class="page-header" style="justify-content: space-between; display: flex; width: 100%;">
                     <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
-                    <h3>Safety Checklist</h3>
+                    <button id="complete-checklist-btn" class="verify-btn">VERIFY & UNLOCK</button>
                 </div>
                 <div id="checklist-items" class="checklist-grid"></div>
-                <button id="complete-checklist-btn" class="action-button secondary">Verify & Unlock Drive</button>
             </section>
         </main>
 
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash"><span></span>Dash</button>
             <button class="nav-item" onclick="showPage('checklist')" id="nav-check"><span></span>Checklist</button>
-            <button class="nav-item" onclick="alert('Timeline coming soon')"><span></span>History</button>
         </nav>
     </div>
     <script src="app.js"></script>
