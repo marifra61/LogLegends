@@ -1,4 +1,4 @@
-// Import Firebase modules (make sure these are loaded via CDN in index.html)
+// Import Firebase modules
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
@@ -17,24 +17,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ============================================
-// NAVIGATION
+// GOOGLE LOGIN HANDLER - MUST BE ON WINDOW
 // ============================================
-window.showPage = function(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
-    const targetPage = document.getElementById('page-' + pageId);
-    const targetNav = document.getElementById('nav-' + (pageId === 'dashboard' ? 'dash' : pageId.substring(0, 4)));
-    
-    if (targetPage) targetPage.classList.add('active');
-    if (targetNav) targetNav.classList.add('active');
-    console.log('Navigating to:', pageId);
-};
-
-// ============================================
-// GOOGLE LOGIN HANDLER
-// ============================================
-window.handleCredentialResponse = async (response) => {
+function handleCredentialResponse(response) {
     try {
         if (!response || !response.credential) {
             console.error('Invalid credential response');
@@ -64,6 +49,24 @@ window.handleCredentialResponse = async (response) => {
         console.error('Login error:', error);
         alert('Login failed. Please try again.');
     }
+}
+
+// CRITICAL: Make it globally available for Google's callback
+window.handleCredentialResponse = handleCredentialResponse;
+
+// ============================================
+// NAVIGATION
+// ============================================
+window.showPage = function(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    const targetPage = document.getElementById('page-' + pageId);
+    const targetNav = document.getElementById('nav-' + (pageId === 'dashboard' ? 'dash' : pageId.substring(0, 4)));
+    
+    if (targetPage) targetPage.classList.add('active');
+    if (targetNav) targetNav.classList.add('active');
+    console.log('Navigating to:', pageId);
 };
 
 // ============================================
