@@ -3,26 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | Drive Safe</title>
+    <title>LogLegends | Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
+        <div class="top-nav">
+            <div class="progress-container">
+                <div id="top-total-progress-bar" class="progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="badge-row">
+                <span id="total-hours-badge">0.0 / 60h</span>
+                <span id="top-night-hours-display">0/10h</span>
+            </div>
+        </div>
+
         <div id="map-display"></div>
+
         <div class="dashboard-panel">
-            <header>
-                <h1>LogLegends</h1>
-                <div class="status-badge">Drive Session Active</div>
-            </header>
+            <div id="checklist-section">
+                <h3>Safety Checklist</h3>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check-mirrors" class="vibe-check">
+                    <label for="check-mirrors">Mirrors & Seat Adjusted</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check-belt" class="vibe-check">
+                    <label for="check-belt">Seatbelt Fastened</label>
+                </div>
+                <p id="checklist-warning" style="color: #ff6d00; font-size: 0.8rem; margin-top: 5px;">Complete checklist to unlock drive</p>
+            </div>
+
             <div class="timer-display">
-                <span class="label">Timer</span>
                 <div id="timer">00:00:00</div>
             </div>
-            <div class="stats-row">
-                <div class="stat-item"><span>Miles:</span> <b id="miles">0.0</b></div>
-                <div class="stat-item"><span>Session:</span> <b id="session-type">Day</b></div>
-            </div>
-            <button id="start-btn" class="action-button">START DRIVE</button>
+
+            <button id="start-drive-btn" class="action-button" disabled style="opacity: 0.5;">START DRIVE</button>
         </div>
     </div>
     <script src="app.js"></script>
