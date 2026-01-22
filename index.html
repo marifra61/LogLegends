@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LogLegends | Secure Sync</title>
+    <title>LogLegends | Certified Sync</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -27,7 +27,7 @@
             <section id="page-checklist" class="page">
                 <div class="page-header" style="justify-content: space-between; display: flex; width: 100%;">
                     <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
-                    <h3>Safety Check</h3>
+                    <h3>Pre-Drive Safety</h3>
                     <button id="complete-checklist-btn" class="verify-btn">VERIFY</button>
                 </div>
                 <div id="checklist-items" class="checklist-grid"></div>
@@ -40,13 +40,13 @@
                          data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" 
                          data-callback="handleCredentialResponse">
                     </div>
-                    <div class="g_id_signin" data-type="standard"></div>
+                    <div class="g_id_signin" id="google-login-btn"></div>
                     
-                    <div id="sync-status-area" style="margin-top: 20px; padding: 15px; background: #111; border: 1px solid #333; border-radius: 10px; display: none;">
+                    <div id="sync-status-area" style="display: none; margin-top: 20px; padding: 15px; background: #111; border: 1px solid #333; border-radius: 10px;">
                         <div id="user-info"></div>
                         <p style="font-size: 0.8rem; color: #00e5ff; margin: 10px 0 0 0;"> Cloud Sync Active</p>
-                        <p style="font-size: 0.7rem; color: #888;">Last Backup: <span id="sync-time">Never</span></p>
-                        <button onclick="localStorage.clear(); location.reload();" class="back-btn" style="margin-top:10px; font-size:0.6rem;">Logout</button>
+                        <p style="font-size: 0.7rem; color: #888;">Backup: <span id="sync-time">...</span></p>
+                        <button onclick="localStorage.clear(); location.reload();" class="back-btn" style="margin-top:10px; font-size: 0.6rem;">Logout</button>
                     </div>
                 </div>
             </section>
@@ -58,9 +58,8 @@
             <button class="nav-item" onclick="showPage('profile')" id="nav-prof"><span></span>Profile</button>
         </nav>
     </div>
-    
-    <script type="module" src="auth-handler.js"></script>
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
