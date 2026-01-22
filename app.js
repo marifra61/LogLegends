@@ -1,9 +1,26 @@
-﻿import Storage from './storage.js';
-
+﻿// LogLegends Global Engine
 let map;
 let driveInterval;
 let startTime;
 
+// 1. Storage Logic (Embedded)
+const Storage = {
+    init() {
+        if (!localStorage.getItem('loglegends_data')) {
+            localStorage.setItem('loglegends_data', JSON.stringify({
+                profile: { totalHours: 0, goal: 60, nightHours: 0, nightGoal: 10 },
+                drives: []
+            }));
+        }
+    },
+    saveDrive(hours) {
+        const data = JSON.parse(localStorage.getItem('loglegends_data'));
+        data.profile.totalHours += hours;
+        localStorage.setItem('loglegends_data', JSON.stringify(data));
+    }
+};
+
+// 2. Map Initialization
 window.initMap = function() {
     map = new google.maps.Map(document.getElementById("map-display"), {
         center: { lat: 35.584, lng: -78.800 }, 
@@ -13,14 +30,7 @@ window.initMap = function() {
     });
 };
 
-function loadGoogleMaps() {
-    const apiKey = "AIzaSyB1DACu4yoRMzIdvo0USYc-Gg4vtRvEDZk"; 
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
-    script.async = true;
-    document.head.appendChild(script);
-}
-
+// 3. Logic to unlock the button
 function toggleChecklist() {
     const m = document.getElementById('check-mirrors').checked;
     const b = document.getElementById('check-belt').checked;
@@ -30,48 +40,51 @@ function toggleChecklist() {
     if (m && b && p) {
         btn.disabled = false;
         btn.style.opacity = "1";
-        btn.style.backgroundColor = "#00e5ff"; // Cyan when ready
+        btn.style.backgroundColor = "#00e5ff"; 
+        console.log("Checklist complete. Button unlocked.");
     } else {
         btn.disabled = true;
         btn.style.opacity = "0.5";
+        btn.style.backgroundColor = "#333";
     }
 }
 
+// 4. App Start
 document.addEventListener('DOMContentLoaded', () => {
     Storage.init();
-    loadGoogleMaps();
+    
+    // Load Google Maps
+    const apiKey = "AIzaSyB1DACu4yoRMzIdvo0USYc-Gg4vtRvEDZk"; 
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+    document.head.appendChild(script);
 
-    // Attach listeners to the new Grid items
-    ['check-mirrors', 'check-belt', 'check-phone'].forEach(id => {
-        document.getElementById(id).addEventListener('change', toggleChecklist);
-    });
+    // Link Checkboxes
+    document.getElementById('check-mirrors').onchange = toggleChecklist;
+    document.getElementById('check-belt').onchange = toggleChecklist;
+    document.getElementById('check-phone').onchange = toggleChecklist;
 
+    // Button Click Handler
     const startBtn = document.getElementById('start-drive-btn');
-    startBtn.addEventListener('click', () => {
+    startBtn.onclick = function() {
         if (startBtn.textContent === "START DRIVE") {
             startBtn.textContent = "STOP DRIVE";
             startBtn.style.backgroundColor = "#ff4444";
             startTime = Date.now();
-            driveInterval = setInterval(updateTimer, 1000);
+            driveInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const hrs = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
+            }, 1000);
         } else {
-            const elapsedHours = (Date.now() - startTime) / (1000 * 60 * 60);
-            Storage.saveDrive({
-                duration: elapsedHours,
-                isNight: new Date().getHours() >= 18 || new Date().getHours() < 6,
-                timestamp: new Date().toISOString()
-            });
             clearInterval(driveInterval);
+            const finalHours = (Date.now() - startTime) / 3600000;
+            Storage.saveDrive(finalHours);
             startBtn.textContent = "START DRIVE";
             startBtn.style.backgroundColor = "#00e5ff";
             alert("Drive session saved!");
         }
-    });
+    };
 });
-
-function updateTimer() {
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const hrs = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-    const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-    const secs = String(elapsed % 60).padStart(2, '0');
-    document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
-}
