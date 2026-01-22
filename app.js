@@ -21,18 +21,30 @@ function loadGoogleMaps() {
     document.head.appendChild(script);
 }
 
-function updateUIFromStorage() {
-    const data = Storage.getData();
-    const percent = (data.profile.totalHours / data.profile.goal) * 100;
-    document.getElementById('top-total-progress-bar').style.width = `${percent}%`;
-    document.getElementById('total-hours-badge').textContent = `${data.profile.totalHours.toFixed(1)} / ${data.profile.goal}h`;
-    document.getElementById('top-night-hours-display').textContent = `${data.profile.nightHours.toFixed(1)}/${data.profile.nightGoal}h`;
+function toggleChecklist() {
+    const m = document.getElementById('check-mirrors').checked;
+    const b = document.getElementById('check-belt').checked;
+    const p = document.getElementById('check-phone').checked;
+    const btn = document.getElementById('start-drive-btn');
+    
+    if (m && b && p) {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.backgroundColor = "#00e5ff"; // Cyan when ready
+    } else {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     Storage.init();
     loadGoogleMaps();
-    updateUIFromStorage();
+
+    // Attach listeners to the new Grid items
+    ['check-mirrors', 'check-belt', 'check-phone'].forEach(id => {
+        document.getElementById(id).addEventListener('change', toggleChecklist);
+    });
 
     const startBtn = document.getElementById('start-drive-btn');
     startBtn.addEventListener('click', () => {
@@ -43,18 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
             driveInterval = setInterval(updateTimer, 1000);
         } else {
             const elapsedHours = (Date.now() - startTime) / (1000 * 60 * 60);
-            
-            // Save the drive
             Storage.saveDrive({
                 duration: elapsedHours,
                 isNight: new Date().getHours() >= 18 || new Date().getHours() < 6,
                 timestamp: new Date().toISOString()
             });
-
             clearInterval(driveInterval);
             startBtn.textContent = "START DRIVE";
             startBtn.style.backgroundColor = "#00e5ff";
-            updateUIFromStorage();
             alert("Drive session saved!");
         }
     });
