@@ -9,9 +9,9 @@
 <body>
     <div id="app-container">
         <div class="top-nav metrics-grid">
-            <div class="metric-item"><label>TOTAL (60h)</label><div class="bar-bg"><div id="bar-total" class="bar-fill cyan"></div></div><span id="txt-total">0.0h</span></div>
-            <div class="metric-item"><label>NIGHT (10h)</label><div class="bar-bg"><div id="bar-night" class="bar-fill orange"></div></div><span id="txt-night">0.0h</span></div>
-            <div class="metric-item"><label>WEEKLY CAP</label><div class="bar-bg"><div id="bar-weekly" class="bar-fill green"></div></div><span id="txt-weekly">0.0h</span></div>
+            <div class="metric-item"><label>TOTAL</label><div class="bar-bg"><div id="bar-total" class="bar-fill cyan"></div></div><span id="txt-total">0.0h</span></div>
+            <div class="metric-item"><label>NIGHT</label><div class="bar-bg"><div id="bar-night" class="bar-fill orange"></div></div><span id="txt-night">0.0h</span></div>
+            <div class="metric-item"><label>WEEKLY</label><div class="bar-bg"><div id="bar-weekly" class="bar-fill green"></div></div><span id="txt-weekly">0.0h</span></div>
         </div>
 
         <main id="main-content">
@@ -27,25 +27,21 @@
             <section id="page-checklist" class="page">
                 <div class="page-header" style="justify-content: space-between; display: flex; width: 100%;">
                     <button class="back-btn" onclick="showPage('dashboard')"> Back</button>
-                    <h3>Pre-Drive Safety</h3>
+                    <h3>Safety Check</h3>
                     <button id="complete-checklist-btn" class="verify-btn">VERIFY</button>
                 </div>
                 <div id="checklist-items" class="checklist-grid"></div>
             </section>
 
             <section id="page-profile" class="page">
-                <div class="page-header"><h3>Driver Profile</h3></div>
+                <div class="page-header"><h3>Profile</h3></div>
                 <div class="profile-card">
-                    <div id="g_id_onload" 
-                         data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" 
-                         data-callback="handleCredentialResponse">
-                    </div>
+                    <div id="g_id_onload" data-client_id="807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
                     <div class="g_id_signin" id="google-btn"></div>
                     <div id="user-display" style="display:none; margin-top:20px; text-align: center;">
                         <img id="user-pic" src="" style="border-radius:50%; width:60px; border:2px solid #00e5ff;">
                         <h3 id="user-name" style="color:white; margin:10px 0;"></h3>
-                        <p style="color:#00e5ff; font-size:0.8rem;"> Cloud Sync Connected</p>
-                        <button onclick="localStorage.clear(); location.reload();" class="back-btn" style="margin-top:20px;">Logout / Reset</button>
+                        <button onclick="localStorage.clear(); location.reload();" class="back-btn">Logout</button>
                     </div>
                 </div>
             </section>

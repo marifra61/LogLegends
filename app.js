@@ -1,4 +1,32 @@
-﻿window.showPage = function(id) {
+﻿// 1. GLOBAL NAVIGATION
+window.showPage = function(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    const targetPage = document.getElementById('page-' + id);
+    if (targetPage) targetPage.classList.add('active');
+    
+    const navId = (id === 'dashboard') ? 'nav-dash' : 'nav-' + id.substring(0,4);
+    const targetNav = document.getElementById(navId);
+    if (targetNav) targetNav.classList.add('active');
+};
+
+// 2. RE-ATTACH CORE EVENTS
+window.addEventListener('DOMContentLoaded', () => {
+    // Re-link the Start/Stop buttons
+    const startBtn = document.getElementById('start-drive-btn');
+    if (startBtn) {
+        startBtn.onclick = () => { if(window.startDrive) window.startDrive(); };
+    }
+
+    // Re-link the Checklist Verify button
+    const verifyBtn = document.getElementById('complete-checklist-btn');
+    if (verifyBtn) {
+        verifyBtn.onclick = () => { if(window.validateChecklist) window.validateChecklist(); };
+    }
+    
+    console.log("Button listeners re-attached.");
+});window.showPage = function(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
@@ -77,5 +105,6 @@ window.showPage = (id) => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
 };
+
 
 
