@@ -28,6 +28,12 @@ window.showPage = function(pageId) {
     
     if (targetPage) targetPage.classList.add('active');
     if (targetNav) targetNav.classList.add('active');
+    
+    // Load timeline when switching to profile page
+    if (pageId === 'profile' && window.loadTimeline) {
+        setTimeout(() => window.loadTimeline(), 100);
+    }
+    
     console.log('Navigating to:', pageId);
 };
 
@@ -69,6 +75,8 @@ function syncProfileUI(time) {
         // Color based on sync status
         if (time === 'Offline Mode') {
             syncTime.style.color = '#ff9800';
+        } else if (time === 'Syncing...') {
+            syncTime.style.color = '#00bfff';
         } else {
             syncTime.style.color = '#00e5ff';
         }
@@ -80,9 +88,13 @@ function syncProfileUI(time) {
 // ============================================
 async function pullFromCloud() {
     const uid = localStorage.getItem('log_uid');
-    if (!uid) return;
+    if (!uid) {
+        console.log('No user logged in');
+        return;
+    }
     
     console.log('Attempting to sync from cloud...');
+    syncProfileUI('Syncing...');
     
     // Create a timeout promise (5 seconds)
     const timeoutPromise = new Promise((_, reject) => {
@@ -91,26 +103,49 @@ async function pullFromCloud() {
     
     // Create the actual sync promise
     const syncPromise = (async () => {
-        const docRef = doc(db, "users", uid);
-        const snap = await getDoc(docRef);
-        
-        if (snap.exists()) {
-            const cloudData = snap.data();
-            if (cloudData.stats) {
-                localStorage.setItem('driving_stats', JSON.stringify(cloudData.stats));
-                console.log('Cloud data synced:', cloudData);
-                syncProfileUI(cloudData.lastUpdated || 'Just now');
+        try {
+            const docRef = doc(db, "users", uid);
+            const snap = await getDoc(docRef);
+            
+            if (snap.exists()) {
+                const cloudData = snap.data();
+                console.log('Cloud data retrieved:', cloudData);
                 
-                // Refresh dashboard if it exists
-                if (window.loadDashboard) {
-                    window.loadDashboard();
+                if (cloudData.stats) {
+                    // Merge cloud data with local data
+                    const localStats = window.getStats ? window.getStats() : null;
+                    
+                    // If cloud has more recent data, use it
+                    if (!localStats || cloudData.stats.trips.length >= localStats.trips.length) {
+                        localStorage.setItem('driving_stats', JSON.stringify(cloudData.stats));
+                        console.log('Cloud data synced to local storage');
+                    }
+                    
+                    syncProfileUI(cloudData.lastUpdated || 'Just now');
+                    
+                    // Refresh dashboard
+                    if (window.loadDashboard) {
+                        window.loadDashboard();
+                    }
+                    
+                    // Refresh timeline if on profile page
+                    const currentPage = document.querySelector('.page.active');
+                    if (currentPage && currentPage.id === 'page-profile' && window.loadTimeline) {
+                        window.loadTimeline();
+                    }
+                    
+                    return true;
                 }
-                return true;
+            } else {
+                console.log('No cloud data found, using local data');
+                syncProfileUI('First Sync');
+                // Push local data to cloud for first time
+                await pushToCloud();
+                return false;
             }
-        } else {
-            console.log('No cloud data found, using local data');
-            syncProfileUI('Local Mode');
-            return false;
+        } catch (error) {
+            console.error('Sync error:', error);
+            throw error;
         }
     })();
     
@@ -127,6 +162,7 @@ window.pushToCloud = async function() {
     const uid = localStorage.getItem('log_uid');
     if (!uid) {
         console.log('No user logged in');
+        alert('Please login to sync to cloud');
         return;
     }
     
@@ -135,31 +171,37 @@ window.pushToCloud = async function() {
     // Show syncing status
     syncProfileUI('Syncing...');
     
-    // Create a timeout promise (5 seconds)
+    // Create a timeout promise (10 seconds for push)
     const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Push timeout')), 5000);
+        setTimeout(() => reject(new Error('Push timeout')), 10000);
     });
     
     // Create the actual push promise
     const pushPromise = (async () => {
-        const statsStr = localStorage.getItem('driving_stats');
-        const stats = statsStr ? JSON.parse(statsStr) : {
-            totalHours: 0,
-            nightHours: 0,
-            weeklyHours: 0,
-            trips: []
-        };
-        
-        const docRef = doc(db, "users", uid);
-        await setDoc(docRef, {
-            stats: stats,
-            lastUpdated: new Date().toLocaleString(),
-            userEmail: localStorage.getItem('log_email') || ''
-        }, { merge: true });
-        
-        console.log('Data pushed to cloud successfully');
-        syncProfileUI('Just now');
-        alert('✓ Data synced to cloud!');
+        try {
+            const statsStr = localStorage.getItem('driving_stats');
+            const stats = statsStr ? JSON.parse(statsStr) : {
+                totalHours: 0,
+                nightHours: 0,
+                weeklyHours: 0,
+                trips: []
+            };
+            
+            const docRef = doc(db, "users", uid);
+            await setDoc(docRef, {
+                stats: stats,
+                lastUpdated: new Date().toLocaleString(),
+                userEmail: localStorage.getItem('log_email') || '',
+                userName: localStorage.getItem('log_name') || ''
+            }, { merge: true });
+            
+            console.log('Data pushed to cloud successfully');
+            syncProfileUI('Just now');
+            alert('✅ Data synced to cloud!');
+        } catch (error) {
+            console.error('Push error:', error);
+            throw error;
+        }
     })();
     
     // Race between timeout and actual push
@@ -198,16 +240,30 @@ async function init() {
         
         // Try to sync, but don't block app initialization
         pullFromCloud().then(() => {
-            console.log('Sync complete');
+            console.log('Initial sync complete');
         }).catch(err => {
-            console.warn('Sync failed:', err);
+            console.warn('Initial sync failed:', err);
         });
     } else {
         console.log('No user logged in');
     }
     
+    // Initialize dashboard
+    if (window.loadDashboard) {
+        window.loadDashboard();
+    }
+    
     // Re-attach button listeners
     attachEventListeners();
+    
+    // Update premium badge if applicable
+    if (window.isPremiumUser && window.isPremiumUser()) {
+        setTimeout(() => {
+            if (window.updatePremiumBadge) {
+                window.updatePremiumBadge();
+            }
+        }, 500);
+    }
     
     console.log('App initialized successfully');
 }
@@ -235,3 +291,28 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// Export for debugging
+window.debugSync = async function() {
+    console.log('=== SYNC DEBUG INFO ===');
+    console.log('User ID:', localStorage.getItem('log_uid'));
+    console.log('User Name:', localStorage.getItem('log_name'));
+    console.log('Local Stats:', localStorage.getItem('driving_stats'));
+    
+    const uid = localStorage.getItem('log_uid');
+    if (uid) {
+        try {
+            const docRef = doc(db, "users", uid);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                console.log('Cloud Data:', snap.data());
+            } else {
+                console.log('No cloud data found');
+            }
+        } catch (error) {
+            console.error('Error fetching cloud data:', error);
+        }
+    }
+};
+
+console.log('App.js loaded with enhanced cloud sync');
