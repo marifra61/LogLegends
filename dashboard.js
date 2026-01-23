@@ -101,6 +101,8 @@ window.startDrive = function() {
         if (safetyStatus) {
             safetyStatus.textContent = '🚗 Drive in Progress';
             safetyStatus.style.background = 'linear-gradient(90deg, #ff6b35, #ff8c42)';
+            safetyStatus.style.cursor = 'default';
+            safetyStatus.onclick = null;
         }
         
         // Start timer
@@ -217,8 +219,10 @@ function saveTrip(durationHours, endLocation, routeData) {
     }
     
     if (safetyStatus) {
-        safetyStatus.textContent = 'Safety Check Required';
+        safetyStatus.textContent = 'Safety Check Required →';
         safetyStatus.style.background = 'linear-gradient(90deg, #ff6b35, #ff8c42)';
+        safetyStatus.style.cursor = 'pointer';
+        safetyStatus.onclick = window.navigateToChecklist;
     }
     
     if (timerDisplay) {

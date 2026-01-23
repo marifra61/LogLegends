@@ -55,6 +55,8 @@ window.validateChecklist = function() {
         if (safetyStatus) {
             safetyStatus.textContent = '✓ Safety Check Complete';
             safetyStatus.style.background = 'linear-gradient(90deg, #00e676, #00c853)';
+            safetyStatus.style.cursor = 'default';
+            safetyStatus.onclick = null;
         }
         
         alert('✓ Safety check complete! You can now start your drive from the Dashboard.');

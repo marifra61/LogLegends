@@ -70,7 +70,9 @@
 
             <div class="timer-display" id="timer-display">00:00:00</div>
             
-            <div class="safety-status" id="safety-status">Safety Check Required</div>
+            <div class="safety-status" id="safety-status" onclick="navigateToChecklist()" style="cursor: pointer;">
+                Safety Check Required →
+            </div>
             
             <button class="start-btn disabled" id="start-drive-btn" disabled>START DRIVE</button>
             
@@ -131,6 +133,17 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <script>
+        // Navigate to checklist when safety status is clicked
+        window.navigateToChecklist = function() {
+            const safetyComplete = localStorage.getItem('safety_check_complete');
+            // Only navigate if checklist is not already complete
+            if (safetyComplete !== 'true') {
+                if (window.showPage) {
+                    window.showPage('checklist');
+                }
+            }
+        };
+        
         // Toggle sync modal
         window.toggleSyncModal = function() {
             const syncArea = document.getElementById('sync-status-area');
