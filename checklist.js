@@ -1,11 +1,11 @@
 // Checklist items for pre-drive safety
 const checklistItems = [
+    { id: 'tires', label: 'Visually inspect tire pressure' },
     { id: 'mirrors', label: 'Adjust all mirrors (side and rear-view)' },
     { id: 'seat', label: 'Adjust seat position and headrest' },
     { id: 'seatbelt', label: 'Fasten seatbelt securely' },
     { id: 'lights', label: 'Check all lights are working' },
     { id: 'signals', label: 'Test turn signals and hazards' },
-    { id: 'tires', label: 'Visually inspect tire pressure' },
     { id: 'phone', label: 'Phone is silenced or stored away' },
     { id: 'passengers', label: 'All passengers buckled in' }
 ];
