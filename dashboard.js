@@ -1,4 +1,4 @@
-// Dashboard functionality
+// Dashboard functionality with enhanced GPS tracking
 
 let driveStartTime = null;
 let driveInterval = null;
@@ -34,7 +34,7 @@ function updateStat(type, current, max) {
     }
 }
 
-// Start a driving session
+// Start a driving session with GPS tracking
 window.startDrive = function() {
     // Check if safety check is complete
     const safetyComplete = localStorage.getItem('safety_check_complete');
@@ -56,7 +56,20 @@ window.startDrive = function() {
         // Start the drive
         driveStartTime = new Date();
         
-        // Get GPS location
+        // Replace map placeholder with actual map
+        const mapPlaceholder = document.querySelector('.map-placeholder');
+        if (mapPlaceholder) {
+            mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
+            
+            // Initialize map after DOM update
+            setTimeout(() => {
+                if (window.initMap) {
+                    window.initMap();
+                }
+            }, 100);
+        }
+        
+        // Get GPS location and start tracking
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -65,10 +78,16 @@ window.startDrive = function() {
                         lng: position.coords.longitude
                     };
                     console.log('Start location:', startLocation);
+                    
+                    // Start route tracking
+                    if (window.startRouteTracking) {
+                        window.startRouteTracking(startLocation);
+                    }
                 },
                 (error) => {
                     console.log('GPS error:', error);
                     startLocation = null;
+                    alert('⚠️ GPS not available. Drive will be recorded without location data.');
                 }
             );
         }
@@ -98,30 +117,41 @@ function stopDrive() {
     const durationMs = endTime - driveStartTime;
     const durationHours = durationMs / (1000 * 60 * 60);
     
-    // Get end location
-    let endLocation = null;
+    // Get end location and stop tracking
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                endLocation = {
+                const endLocation = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
                 };
                 
-                // Save the trip
-                saveTrip(durationHours, endLocation);
+                // Stop tracking and get route data
+                let routeData = null;
+                if (window.stopRouteTracking) {
+                    routeData = window.stopRouteTracking(endLocation);
+                }
+                
+                // Save the trip with route data
+                saveTrip(durationHours, endLocation, routeData);
             },
             (error) => {
                 console.log('GPS error on stop:', error);
-                saveTrip(durationHours, null);
+                
+                // Stop tracking anyway
+                if (window.stopRouteTracking) {
+                    window.stopRouteTracking(null);
+                }
+                
+                saveTrip(durationHours, null, null);
             }
         );
     } else {
-        saveTrip(durationHours, null);
+        saveTrip(durationHours, null, null);
     }
 }
 
-function saveTrip(durationHours, endLocation) {
+function saveTrip(durationHours, endLocation, routeData) {
     const trip = {
         id: Date.now(),
         startTime: driveStartTime.toISOString(),
@@ -129,7 +159,9 @@ function saveTrip(durationHours, endLocation) {
         duration: durationHours,
         isNight: window.isNightTime ? window.isNightTime() : false,
         startLocation: startLocation,
-        endLocation: endLocation
+        endLocation: endLocation,
+        route: routeData ? routeData.points : null,
+        distance: routeData ? routeData.distance : null
     };
     
     // Add trip to stats
@@ -171,6 +203,21 @@ function saveTrip(durationHours, endLocation) {
     driveStartTime = null;
     startLocation = null;
     
+    // Clear map and restore placeholder
+    if (window.clearMap) {
+        window.clearMap();
+    }
+    
+    const mapContainer = document.getElementById('map-container');
+    if (mapContainer && mapContainer.parentElement) {
+        mapContainer.parentElement.innerHTML = `
+            <div class="map-placeholder">
+                <p>🗺️</p>
+                <small>GPS tracking active during drive</small>
+            </div>
+        `;
+    }
+    
     // Reload dashboard stats
     window.loadDashboard();
     
@@ -179,7 +226,9 @@ function saveTrip(durationHours, endLocation) {
         window.pushToCloud();
     }
     
-    alert(`Drive complete! Duration: ${durationHours.toFixed(2)} hours`);
+    // Show summary
+    const distanceText = trip.distance ? ` (${trip.distance.toFixed(2)} miles)` : '';
+    alert(`Drive complete! Duration: ${durationHours.toFixed(2)} hours${distanceText}`);
     
     console.log('Drive stopped, trip saved:', trip);
 }
@@ -212,4 +261,4 @@ if (document.readyState === 'loading') {
     window.loadDashboard();
 }
 
-console.log('Dashboard module loaded');
+console.log('Dashboard module with GPS tracking loaded');

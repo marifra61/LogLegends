@@ -15,9 +15,6 @@
     <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🚗</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🚗</text></svg>">
     
-    <!-- Leaflet CSS for maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -30,14 +27,13 @@
             <div id="g_id_signin" style="margin: 20px auto;"></div>
         </div>
 
-        <!-- Sync Status Area with Premium Badge -->
+        <!-- Sync Status Area - Collapsible -->
         <div id="sync-status-area" style="display:none;" class="collapsed">
             <button id="close-sync-btn" onclick="toggleSyncModal()" style="display:none;">×</button>
             <div id="user-info" onclick="toggleSyncModal()"></div>
             <div id="sync-time"></div>
             <div id="sync-controls" style="display:none;">
                 <button onclick="pushToCloud()" style="background: #00e5ff; color: #000;">Sync</button>
-                <button onclick="window.showPricingModal()" style="background: #FFD700; color: #000;">⭐ Premium</button>
                 <button onclick="logoutUser()" style="background: #ff4444; color: white;">Logout</button>
             </div>
         </div>
@@ -74,10 +70,9 @@
             
             <button class="start-btn disabled" id="start-drive-btn" disabled>START DRIVE</button>
             
-            <!-- Map area (starts as placeholder, becomes real map during drive) -->
             <div class="map-placeholder">
                 <p>🗺️</p>
-                <small>Live GPS tracking during drive</small>
+                <small>GPS tracking active during drive</small>
             </div>
         </div>
 
@@ -88,22 +83,9 @@
             <button class="verify-btn" id="complete-checklist-btn">VERIFY</button>
         </div>
 
-        <!-- Profile Page with Export Button -->
+        <!-- Profile Page -->
         <div class="page" id="page-profile">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="color: white; font-size: 1.8rem; margin: 0;">Trip History</h2>
-                <button onclick="window.exportToPDF()" style="
-                    background: linear-gradient(135deg, #00e676, #00c853);
-                    color: white;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 10px;
-                    font-size: 1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3);
-                ">📄 Export PDF</button>
-            </div>
+            <h2 style="color: white; text-align: center; margin-bottom: 25px; font-size: 1.8rem;">Trip History</h2>
             <div id="timeline-container"></div>
         </div>
 
@@ -124,10 +106,6 @@
         </nav>
     </div>
 
-    <!-- External Libraries -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://js.stripe.com/v3/"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <script>
@@ -202,16 +180,12 @@
         }
     </script>
 
-    <!-- Load app scripts in correct order -->
     <script type="module" src="app.js"></script>
     <script src="storage.js"></script>
-    <script src="freemium.js"></script>
-    <script src="map.js"></script>
     <script src="dashboard.js"></script>
     <script src="checklist.js"></script>
     <script src="timeline.js"></script>
     <script src="profile.js"></script>
-    <script src="pdf-export.js"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
