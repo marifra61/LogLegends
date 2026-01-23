@@ -1,4 +1,4 @@
-// Dashboard functionality with enhanced GPS tracking
+// Dashboard functionality with Firebase-compatible GPS tracking
 
 let driveStartTime = null;
 let driveInterval = null;
@@ -152,19 +152,54 @@ function stopDrive() {
 }
 
 function saveTrip(durationHours, endLocation, routeData) {
+    // Create Firebase-compatible trip object
     const trip = {
         id: Date.now(),
         startTime: driveStartTime.toISOString(),
         endTime: new Date().toISOString(),
         duration: durationHours,
         isNight: window.isNightTime ? window.isNightTime() : false,
-        startLocation: startLocation,
-        endLocation: endLocation,
-        route: routeData ? routeData.points : null,
-        distance: routeData ? routeData.distance : null
+        startLocation: startLocation ? {
+            lat: Number(startLocation.lat.toFixed(6)),
+            lng: Number(startLocation.lng.toFixed(6))
+        } : null,
+        endLocation: endLocation ? {
+            lat: Number(endLocation.lat.toFixed(6)),
+            lng: Number(endLocation.lng.toFixed(6))
+        } : null,
+        distance: routeData && routeData.distance ? Number(routeData.distance.toFixed(2)) : null
     };
     
-    // Add trip to stats
+    // Store full route data separately in localStorage for viewing
+    // Don't send to Firebase (too large)
+    if (routeData && routeData.points && routeData.points.length > 0) {
+        // Limit route points to reduce size (keep every Nth point for large routes)
+        let routePoints = routeData.points;
+        if (routePoints.length > 20) {
+            // Keep first, last, and sample points in between
+            const step = Math.floor(routePoints.length / 18);
+            const sampledPoints = [routePoints[0]]; // First point
+            for (let i = step; i < routePoints.length - 1; i += step) {
+                sampledPoints.push(routePoints[i]);
+            }
+            sampledPoints.push(routePoints[routePoints.length - 1]); // Last point
+            routePoints = sampledPoints;
+        }
+        
+        // Round coordinates to 6 decimal places (enough precision)
+        const cleanRoute = routePoints.map(point => [
+            Number(point[0].toFixed(6)),
+            Number(point[1].toFixed(6))
+        ]);
+        
+        // Store route in separate localStorage key for this trip
+        localStorage.setItem(`route_${trip.id}`, JSON.stringify(cleanRoute));
+        
+        // Don't include route in trip object sent to Firebase
+        console.log('Route stored locally with', cleanRoute.length, 'points');
+    }
+    
+    // Add trip to stats (this updates localStorage)
     if (window.addTrip) {
         window.addTrip(trip);
     }
@@ -221,14 +256,17 @@ function saveTrip(durationHours, endLocation, routeData) {
     // Reload dashboard stats
     window.loadDashboard();
     
-    // Push to cloud if logged in
-    if (window.pushToCloud) {
-        window.pushToCloud();
-    }
-    
     // Show summary
     const distanceText = trip.distance ? ` (${trip.distance.toFixed(2)} miles)` : '';
     alert(`Drive complete! Duration: ${durationHours.toFixed(2)} hours${distanceText}`);
+    
+    // Push to cloud AFTER showing success message
+    console.log('Attempting to sync trip to cloud...');
+    if (window.pushToCloud) {
+        setTimeout(() => {
+            window.pushToCloud();
+        }, 500);
+    }
     
     console.log('Drive stopped, trip saved:', trip);
 }
@@ -261,4 +299,4 @@ if (document.readyState === 'loading') {
     window.loadDashboard();
 }
 
-console.log('Dashboard module with GPS tracking loaded');
+console.log('Dashboard module with Firebase-compatible GPS tracking loaded');

@@ -1,4 +1,4 @@
-// Timeline functionality with enhanced trip display
+// Timeline functionality with route loading from localStorage
 
 window.loadTimeline = function() {
     const container = document.getElementById('timeline-container');
@@ -65,12 +65,17 @@ function createTimelineItem(trip, index) {
         `;
     }
     
+    // Check if route data exists in localStorage
+    const routeKey = `route_${trip.id}`;
+    const hasRoute = localStorage.getItem(routeKey) !== null;
+    
     // Route info
     let routeInfo = '';
-    if (trip.route && trip.route.length > 0) {
+    if (hasRoute) {
+        const route = JSON.parse(localStorage.getItem(routeKey));
         routeInfo = `
-            <p>🗺️ Route Points: <strong>${trip.route.length}</strong></p>
-            <button onclick="viewTripRoute(${index})" class="view-route-btn" style="
+            <p>🗺️ Route Points: <strong>${route.length}</strong></p>
+            <button onclick="viewTripRoute(${trip.id})" class="view-route-btn" style="
                 background: rgba(0, 229, 255, 0.2);
                 color: #00e5ff;
                 border: 1px solid #00e5ff;
@@ -86,7 +91,7 @@ function createTimelineItem(trip, index) {
     } else if (trip.startLocation && trip.endLocation) {
         routeInfo = `
             <p>📍 Start/End locations tracked</p>
-            <button onclick="viewTripRoute(${index})" class="view-route-btn" style="
+            <button onclick="viewTripRoute(${trip.id})" class="view-route-btn" style="
                 background: rgba(0, 229, 255, 0.2);
                 color: #00e5ff;
                 border: 1px solid #00e5ff;
@@ -118,13 +123,23 @@ function createTimelineItem(trip, index) {
 }
 
 // View a trip's route on the map
-window.viewTripRoute = function(tripIndex) {
+window.viewTripRoute = function(tripId) {
+    // Find trip by ID
     const trips = window.getTrips ? window.getTrips() : [];
-    const trip = trips[tripIndex];
+    const trip = trips.find(t => t.id === tripId);
     
     if (!trip) {
         alert('Trip not found!');
         return;
+    }
+    
+    // Load route from localStorage if it exists
+    const routeKey = `route_${tripId}`;
+    const routeData = localStorage.getItem(routeKey);
+    
+    if (routeData) {
+        trip.route = JSON.parse(routeData);
+        console.log('Route loaded from localStorage:', trip.route.length, 'points');
     }
     
     // Switch to dashboard to show map
@@ -197,4 +212,4 @@ if (document.readyState === 'loading') {
     }
 }
 
-console.log('Enhanced timeline with route viewing loaded');
+console.log('Enhanced timeline with localStorage route loading');
