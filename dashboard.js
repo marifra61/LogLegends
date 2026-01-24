@@ -3,6 +3,118 @@
 let driveStartTime = null;
 let driveInterval = null;
 let startLocation = null;
+let wakeLock = null;
+
+// Request wake lock to keep screen on
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock activated - screen will stay on');
+            
+            // Re-request if wake lock is released (e.g., user switches tabs)
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock released');
+            });
+        } else {
+            console.log('Wake Lock API not supported');
+        }
+    } catch (err) {
+        console.error('Wake Lock error:', err);
+    }
+}
+
+// Release wake lock
+async function releaseWakeLock() {
+    if (wakeLock) {
+        try {
+            await wakeLock.release();
+            wakeLock = null;
+            console.log('Wake Lock released manually');
+        } catch (err) {
+            console.error('Wake Lock release error:', err);
+        }
+    }
+}
+
+// Save active drive state to localStorage
+function saveDriveState() {
+    if (driveStartTime) {
+        const driveState = {
+            startTime: driveStartTime.toISOString(),
+            startLocation: startLocation,
+            savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('active_drive', JSON.stringify(driveState));
+        console.log('Drive state saved');
+    }
+}
+
+// Restore active drive state from localStorage
+function restoreDriveState() {
+    const savedState = localStorage.getItem('active_drive');
+    if (savedState) {
+        try {
+            const driveState = JSON.parse(savedState);
+            driveStartTime = new Date(driveState.startTime);
+            startLocation = driveState.startLocation;
+            
+            // Update UI to show drive in progress
+            const startBtn = document.getElementById('start-drive-btn');
+            const safetyStatus = document.getElementById('safety-status');
+            
+            if (startBtn) {
+                startBtn.textContent = 'STOP DRIVE';
+                startBtn.classList.remove('disabled');
+                startBtn.classList.add('active');
+                startBtn.disabled = false;
+            }
+            
+            if (safetyStatus) {
+                safetyStatus.textContent = '🚗 Drive in Progress';
+                safetyStatus.style.background = 'linear-gradient(90deg, #ff6b35, #ff8c42)';
+                safetyStatus.style.cursor = 'default';
+                safetyStatus.onclick = null;
+            }
+            
+            // Start timer
+            driveInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Update immediately
+            
+            // Reactivate wake lock
+            requestWakeLock();
+            
+            // Show map if we have location
+            if (startLocation) {
+                const mapPlaceholder = document.querySelector('.map-placeholder');
+                if (mapPlaceholder) {
+                    mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
+                    
+                    setTimeout(() => {
+                        if (window.initMap) {
+                            window.initMap();
+                        }
+                        if (window.startRouteTracking) {
+                            window.startRouteTracking(startLocation);
+                        }
+                    }, 100);
+                }
+            }
+            
+            console.log('Drive state restored - continuing from', driveStartTime);
+            alert('Drive resumed! Your timer was preserved.');
+        } catch (error) {
+            console.error('Error restoring drive state:', error);
+            localStorage.removeItem('active_drive');
+        }
+    }
+}
+
+// Clear drive state from localStorage
+function clearDriveState() {
+    localStorage.removeItem('active_drive');
+    console.log('Drive state cleared');
+}
 
 // Load and display dashboard stats
 window.loadDashboard = function() {
@@ -16,6 +128,9 @@ window.loadDashboard = function() {
     updateStat('total', stats.totalHours, 60);
     updateStat('night', stats.nightHours, 10);
     updateStat('weekly', stats.weeklyHours, 10);
+    
+    // Check if there's an active drive to restore
+    restoreDriveState();
     
     console.log('Dashboard loaded:', stats);
 };
@@ -56,6 +171,9 @@ window.startDrive = function() {
         // Start the drive
         driveStartTime = new Date();
         
+        // Request wake lock to keep screen on
+        requestWakeLock();
+        
         // Replace map placeholder with actual map
         const mapPlaceholder = document.querySelector('.map-placeholder');
         if (mapPlaceholder) {
@@ -79,6 +197,9 @@ window.startDrive = function() {
                     };
                     console.log('Start location:', startLocation);
                     
+                    // Save drive state to localStorage
+                    saveDriveState();
+                    
                     // Start route tracking
                     if (window.startRouteTracking) {
                         window.startRouteTracking(startLocation);
@@ -87,9 +208,14 @@ window.startDrive = function() {
                 (error) => {
                     console.log('GPS error:', error);
                     startLocation = null;
+                    // Still save drive state even without GPS
+                    saveDriveState();
                     alert('⚠️ GPS not available. Drive will be recorded without location data.');
                 }
             );
+        } else {
+            // Save drive state even without GPS
+            saveDriveState();
         }
         
         // Update UI
@@ -235,6 +361,12 @@ function saveTrip(durationHours, endLocation, routeData) {
         driveInterval = null;
     }
     
+    // Clear drive state from localStorage
+    clearDriveState();
+    
+    // Release wake lock
+    releaseWakeLock();
+    
     // Reset checklist
     localStorage.removeItem('safety_check_complete');
     
@@ -294,6 +426,11 @@ function updateTimer() {
     if (timerDisplay) {
         timerDisplay.textContent = timeStr;
     }
+    
+    // Save drive state every 10 seconds to protect against page refresh
+    if (seconds % 10 === 0) {
+        saveDriveState();
+    }
 }
 
 // Load dashboard on page load
@@ -302,5 +439,13 @@ if (document.readyState === 'loading') {
 } else {
     window.loadDashboard();
 }
+
+// Re-request wake lock when page becomes visible again
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && driveStartTime) {
+        console.log('Page visible again - re-requesting wake lock');
+        requestWakeLock();
+    }
+});
 
 console.log('Dashboard module with Firebase-compatible GPS tracking loaded');
