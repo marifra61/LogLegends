@@ -90,22 +90,33 @@
             <button class="verify-btn" id="complete-checklist-btn">VERIFY</button>
         </div>
 
-        <!-- Profile Page with Export Button -->
+        <!-- Profile Page with LARGE Export Button -->
         <div class="page" id="page-profile">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="color: white; font-size: 1.8rem; margin: 0;">Trip History</h2>
-                <button onclick="window.exportToPDF()" style="
-                    background: linear-gradient(135deg, #00e676, #00c853);
-                    color: white;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 10px;
-                    font-size: 1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3);
-                ">📄 Export PDF</button>
-            </div>
+            <h2 style="color: white; text-align: center; margin-bottom: 20px; font-size: 1.8rem;">Trip History</h2>
+            
+            <!-- LARGE Export PDF Button - Mobile Optimized -->
+            <button onclick="window.exportToPDF()" style="
+                width: 100%;
+                background: linear-gradient(135deg, #00e676, #00c853);
+                color: white;
+                border: none;
+                padding: 18px 20px;
+                border-radius: 12px;
+                font-size: 1.3rem;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                min-height: 60px;
+            ">
+                <span style="font-size: 1.5rem;">📄</span>
+                <span>Export PDF Report</span>
+            </button>
+            
             <div id="timeline-container"></div>
         </div>
 
