@@ -26,19 +26,21 @@ window.exportToPDF = async function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Header
-        doc.setFontSize(20);
+        // Header with professional styling (no emoji)
+        doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');
-        doc.text('🚗 DRIVING LOG RECORD', 105, 20, { align: 'center' });
+        doc.setTextColor(102, 126, 234); // Purple/blue color
+        doc.text('DRIVING LOG RECORD', 105, 20, { align: 'center' });
         
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.text('State-Compliant Driving Hours Documentation', 105, 27, { align: 'center' });
+        doc.setTextColor(0, 0, 0); // Back to black
+        doc.text('State-Compliant Driving Hours Documentation', 105, 28, { align: 'center' });
         
-        // Line separator
-        doc.setDrawColor(0, 229, 255);
-        doc.setLineWidth(0.5);
-        doc.line(20, 32, 190, 32);
+        // Decorative line
+        doc.setDrawColor(102, 126, 234);
+        doc.setLineWidth(1);
+        doc.line(20, 33, 190, 33);
         
         // Student Information
         let yPos = 45;
