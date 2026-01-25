@@ -165,7 +165,12 @@ window.startDrive = function() {
     const safetyStatus = document.getElementById('safety-status');
     
     if (driveStartTime) {
-        // Stop the drive
+        // Stop the drive - IMMEDIATE UI FEEDBACK
+        startBtn.disabled = true;
+        startBtn.textContent = 'STOPPING...';
+        startBtn.style.opacity = '0.6';
+        
+        // Then stop the drive in background
         stopDrive();
     } else {
         // Start the drive
@@ -241,14 +246,40 @@ window.startDrive = function() {
 function stopDrive() {
     if (!driveStartTime) return;
     
+    // Prevent multiple executions
     const endTime = new Date();
     const durationMs = endTime - driveStartTime;
     const durationHours = durationMs / (1000 * 60 * 60);
     
-    // Get end location and stop tracking
+    // Clear start time immediately to prevent double-stop
+    const savedStartTime = driveStartTime;
+    driveStartTime = null;
+    
+    // Get end location with TIMEOUT
     if (navigator.geolocation) {
+        let locationReceived = false;
+        
+        // Set 3-second timeout for GPS
+        const gpsTimeout = setTimeout(() => {
+            if (!locationReceived) {
+                console.log('GPS timeout - stopping without end location');
+                
+                // Stop tracking anyway
+                if (window.stopRouteTracking) {
+                    window.stopRouteTracking(null);
+                }
+                
+                // Restore start time for save
+                driveStartTime = savedStartTime;
+                saveTrip(durationHours, null, null);
+            }
+        }, 3000);
+        
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                locationReceived = true;
+                clearTimeout(gpsTimeout);
+                
                 const endLocation = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
@@ -260,10 +291,13 @@ function stopDrive() {
                     routeData = window.stopRouteTracking(endLocation);
                 }
                 
-                // Save the trip with route data
+                // Restore start time for save
+                driveStartTime = savedStartTime;
                 saveTrip(durationHours, endLocation, routeData);
             },
             (error) => {
+                locationReceived = true;
+                clearTimeout(gpsTimeout);
                 console.log('GPS error on stop:', error);
                 
                 // Stop tracking anyway
@@ -271,10 +305,19 @@ function stopDrive() {
                     window.stopRouteTracking(null);
                 }
                 
+                // Restore start time for save
+                driveStartTime = savedStartTime;
                 saveTrip(durationHours, null, null);
+            },
+            {
+                timeout: 3000,
+                maximumAge: 0,
+                enableHighAccuracy: true
             }
         );
     } else {
+        // Restore start time for save
+        driveStartTime = savedStartTime;
         saveTrip(durationHours, null, null);
     }
 }
@@ -332,7 +375,7 @@ function saveTrip(durationHours, endLocation, routeData) {
         window.addTrip(trip);
     }
     
-    // Reset UI
+    // Reset UI IMMEDIATELY
     const startBtn = document.getElementById('start-drive-btn');
     const safetyStatus = document.getElementById('safety-status');
     const timerDisplay = document.getElementById('timer-display');
@@ -342,6 +385,7 @@ function saveTrip(durationHours, endLocation, routeData) {
         startBtn.classList.remove('active');
         startBtn.disabled = true;
         startBtn.classList.add('disabled');
+        startBtn.style.opacity = '1';
     }
     
     if (safetyStatus) {
