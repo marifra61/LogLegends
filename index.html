@@ -120,6 +120,80 @@
             <div id="timeline-container"></div>
         </div>
 
+        <!-- Settings Page -->
+        <div class="page" id="page-settings">
+            <h2 style="color: white; text-align: center; margin-bottom: 25px; font-size: 1.8rem;">Settings</h2>
+            
+            <!-- Account Section -->
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Account</h3>
+                <div style="color: white; font-size: 1rem; line-height: 1.8;">
+                    <p><strong>Name:</strong> <span id="settings-name">Loading...</span></p>
+                    <p><strong>Email:</strong> <span id="settings-email">Loading...</span></p>
+                    <p><strong>Status:</strong> <span id="settings-status">Free</span></p>
+                </div>
+            </div>
+
+            <!-- Data Summary Section -->
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Your Driving Data</h3>
+                <div id="data-summary" style="color: white; font-size: 1rem; line-height: 1.8;">
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Premium Section -->
+            <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1)); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid rgba(255, 215, 0, 0.3);">
+                <h3 style="color: #FFD700; font-size: 1.2rem; margin-bottom: 15px;">⭐ Premium</h3>
+                <button onclick="window.showPricingModal()" style="
+                    width: 100%;
+                    background: linear-gradient(135deg, #FFD700, #FFA500);
+                    color: #000;
+                    border: none;
+                    padding: 15px;
+                    border-radius: 10px;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                ">Upgrade to Premium</button>
+            </div>
+
+            <!-- Help Section -->
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Help & Support</h3>
+                <div style="color: white; font-size: 0.95rem; line-height: 1.8;">
+                    <p>📧 <strong>Email:</strong> support@loglegends.com</p>
+                    <p>📖 <strong>Version:</strong> 1.0.0</p>
+                </div>
+            </div>
+
+            <!-- DANGER ZONE -->
+            <div style="background: rgba(255, 0, 0, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(255, 0, 0, 0.3); margin-bottom: 80px;">
+                <h3 style="color: #ff4444; font-size: 1.2rem; margin-bottom: 10px;">⚠️ DANGER ZONE</h3>
+                <p style="color: #ffcccc; font-size: 0.9rem; margin-bottom: 15px;">
+                    Irreversible actions. Proceed with extreme caution.
+                </p>
+                
+                <!-- Delete All Data Button -->
+                <button id="delete-all-btn" onclick="window.deleteAllData()" style="
+                    width: 100%;
+                    background: linear-gradient(135deg, #ff4444, #cc0000);
+                    color: white;
+                    border: 2px solid #ff0000;
+                    padding: 18px;
+                    border-radius: 10px;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin-bottom: 10px;
+                ">🗑️ Delete All Driving Data</button>
+                
+                <p style="color: #ff8888; font-size: 0.85rem; text-align: center; line-height: 1.5;">
+                    This will permanently delete all trips, hours, and GPS routes. This action cannot be undone!
+                </p>
+            </div>
+        </div>
+
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dash" aria-label="Dashboard">
@@ -133,6 +207,10 @@
             <button class="nav-item" onclick="showPage('profile')" id="nav-prof" aria-label="Profile">
                 <span></span>
                 Trips
+            </button>
+            <button class="nav-item" onclick="showPage('settings')" id="nav-sett" aria-label="Settings">
+                <span></span>
+                Settings
             </button>
         </nav>
     </div>
@@ -236,8 +314,41 @@
     <script src="timeline.js"></script>
     <script src="profile.js"></script>
     <script src="pdf-export.js"></script>
+    <script src="settings.js"></script>
     
     <script>
+        // Override showPage to load settings data
+        const originalShowPageFn = window.showPage;
+        window.showPage = function(pageId) {
+            // Call original function
+            if (originalShowPageFn) {
+                originalShowPageFn(pageId);
+            }
+            
+            // Load settings data when opening settings page
+            if (pageId === 'settings') {
+                setTimeout(() => {
+                    // Update user info
+                    const nameEl = document.getElementById('settings-name');
+                    const emailEl = document.getElementById('settings-email');
+                    const statusEl = document.getElementById('settings-status');
+                    
+                    if (nameEl) nameEl.textContent = localStorage.getItem('log_name') || 'N/A';
+                    if (emailEl) emailEl.textContent = localStorage.getItem('log_email') || 'N/A';
+                    if (statusEl) {
+                        const isPremium = window.isPremiumUser ? window.isPremiumUser() : false;
+                        statusEl.textContent = isPremium ? '⭐ Premium' : 'Free';
+                        statusEl.style.color = isPremium ? '#FFD700' : 'white';
+                    }
+                    
+                    // Update data summary and delete button
+                    if (window.updateSettingsDisplay) {
+                        window.updateSettingsDisplay();
+                    }
+                }, 100);
+            }
+        };
+        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
