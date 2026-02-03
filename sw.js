@@ -1,19 +1,19 @@
-const CACHE_NAME = 'loglegends-v5'; // Increment version to force update
+const CACHE_NAME = 'loglegends-v6'; // New domain paths
 const urlsToCache = [
-  '/LogLegends/',
-  '/LogLegends/index.html',
-  '/LogLegends/styles.css',
-  '/LogLegends/app.js',
-  '/LogLegends/storage.js',
-  '/LogLegends/dashboard.js',
-  '/LogLegends/checklist.js',
-  '/LogLegends/timeline.js',
-  '/LogLegends/profile.js',
-  '/LogLegends/map.js',
-  '/LogLegends/pdf-export.js',
-  '/LogLegends/freemium.js',
-  '/LogLegends/settings.js',
-  '/LogLegends/manifest.json'
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/app.js',
+  '/storage.js',
+  '/dashboard.js',
+  '/checklist.js',
+  '/timeline.js',
+  '/profile.js',
+  '/map.js',
+  '/pdf-export.js',
+  '/freemium.js',
+  '/settings.js',
+  '/manifest.json'
 ];
 
 // Install service worker and cache files
@@ -41,7 +41,7 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         // If both cache and network fail, return offline page
-        return caches.match('/LogLegends/index.html');
+        return caches.match('/index.html');
       })
   );
 });
