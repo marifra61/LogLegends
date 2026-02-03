@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loglegends-v3'; // Increment version to force update
+const CACHE_NAME = 'loglegends-v4'; // Increment version to force update
 const urlsToCache = [
   '/LogLegends/',
   '/LogLegends/index.html',

@@ -162,7 +162,7 @@
             <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                 <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Help & Support</h3>
                 <div style="color: white; font-size: 0.95rem; line-height: 1.8;">
-                    <p>📧 <strong>Email:</strong> support@loglegends.com</p>
+                    <p>📧 <strong>Email:</strong> frank@marifradesigns.com</p>
                     <p>📖 <strong>Version:</strong> 1.0.0</p>
                 </div>
             </div>
@@ -208,7 +208,7 @@
                 <span></span>
                 Trips
             </button>
-            <button class="nav-item" onclick="showPage('settings')" id="nav-sett" aria-label="Settings">
+            <button class="nav-item" onclick="showPage('settings'); loadSettingsData();" id="nav-sett" aria-label="Settings">
                 <span></span>
                 Settings
             </button>
@@ -317,38 +317,6 @@
     <script src="settings.js"></script>
     
     <script>
-        // Override showPage to load settings data
-        const originalShowPageFn = window.showPage;
-        window.showPage = function(pageId) {
-            // Call original function
-            if (originalShowPageFn) {
-                originalShowPageFn(pageId);
-            }
-            
-            // Load settings data when opening settings page
-            if (pageId === 'settings') {
-                setTimeout(() => {
-                    // Update user info
-                    const nameEl = document.getElementById('settings-name');
-                    const emailEl = document.getElementById('settings-email');
-                    const statusEl = document.getElementById('settings-status');
-                    
-                    if (nameEl) nameEl.textContent = localStorage.getItem('log_name') || 'N/A';
-                    if (emailEl) emailEl.textContent = localStorage.getItem('log_email') || 'N/A';
-                    if (statusEl) {
-                        const isPremium = window.isPremiumUser ? window.isPremiumUser() : false;
-                        statusEl.textContent = isPremium ? '⭐ Premium' : 'Free';
-                        statusEl.style.color = isPremium ? '#FFD700' : 'white';
-                    }
-                    
-                    // Update data summary and delete button
-                    if (window.updateSettingsDisplay) {
-                        window.updateSettingsDisplay();
-                    }
-                }, 100);
-            }
-        };
-        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')

@@ -1,8 +1,28 @@
 // Settings Page Functionality
 
-// Load settings page
-window.loadSettings = function() {
-    console.log('Settings page loaded');
+// Load settings page data - called directly from nav button onclick
+window.loadSettingsData = function() {
+    setTimeout(() => {
+        // Update user info
+        const nameEl = document.getElementById('settings-name');
+        const emailEl = document.getElementById('settings-email');
+        const statusEl = document.getElementById('settings-status');
+        
+        if (nameEl) nameEl.textContent = localStorage.getItem('log_name') || 'N/A';
+        if (emailEl) emailEl.textContent = localStorage.getItem('log_email') || 'N/A';
+        if (statusEl) {
+            const isPremium = localStorage.getItem('premium_user') === 'true';
+            statusEl.textContent = isPremium ? '⭐ Premium' : 'Free';
+            statusEl.style.color = isPremium ? '#FFD700' : 'white';
+        }
+        
+        // Update data summary and delete button
+        if (window.updateSettingsDisplay) {
+            window.updateSettingsDisplay();
+        }
+        
+        console.log('Settings data loaded');
+    }, 100);
 };
 
 // Delete all data with multiple safeguards
