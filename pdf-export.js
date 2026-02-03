@@ -72,10 +72,11 @@ window.exportToPDF = async function() {
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
         
-        // Create summary box
+        // Create summary box using dynamic requirements
+        const reqs = window.getRequirements ? window.getRequirements() : { totalHours: 60, nightHours: 10, weeklyHours: 10 };
         const summaryData = [
-            ['Total Hours:', `${data.stats.totalHours.toFixed(2)} hours`, 'Requirement: 60 hours'],
-            ['Night Hours (6pm-6am):', `${data.stats.nightHours.toFixed(2)} hours`, 'Requirement: 10 hours'],
+            ['Total Hours:', `${data.stats.totalHours.toFixed(2)} hours`, `Requirement: ${reqs.totalHours} hours`],
+            ['Night Hours (6pm-6am):', `${data.stats.nightHours.toFixed(2)} hours`, `Requirement: ${reqs.nightHours} hours`],
             ['Total Trips:', `${data.stats.trips.length}`, ''],
         ];
         

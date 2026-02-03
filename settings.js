@@ -1,5 +1,73 @@
 // Settings Page Functionality
 
+// Default requirements (North Carolina)
+const DEFAULT_REQUIREMENTS = {
+    totalHours: 60,
+    nightHours: 10,
+    weeklyHours: 10
+};
+
+// Get current requirements from localStorage or defaults
+window.getRequirements = function() {
+    const saved = localStorage.getItem('hour_requirements');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            return {
+                totalHours: Number(parsed.totalHours) || DEFAULT_REQUIREMENTS.totalHours,
+                nightHours: Number(parsed.nightHours) || DEFAULT_REQUIREMENTS.nightHours,
+                weeklyHours: Number(parsed.weeklyHours) || DEFAULT_REQUIREMENTS.weeklyHours
+            };
+        } catch (e) {
+            return { ...DEFAULT_REQUIREMENTS };
+        }
+    }
+    return { ...DEFAULT_REQUIREMENTS };
+};
+
+// Save requirements to localStorage
+window.saveRequirements = function() {
+    const totalEl = document.getElementById('req-total');
+    const nightEl = document.getElementById('req-night');
+    const weeklyEl = document.getElementById('req-weekly');
+    
+    if (!totalEl || !nightEl || !weeklyEl) return;
+    
+    const requirements = {
+        totalHours: Math.max(0, parseInt(totalEl.value) || DEFAULT_REQUIREMENTS.totalHours),
+        nightHours: Math.max(0, parseInt(nightEl.value) || DEFAULT_REQUIREMENTS.nightHours),
+        weeklyHours: Math.max(0, parseInt(weeklyEl.value) || DEFAULT_REQUIREMENTS.weeklyHours)
+    };
+    
+    localStorage.setItem('hour_requirements', JSON.stringify(requirements));
+    console.log('Requirements saved:', requirements);
+    
+    // Refresh dashboard progress bars if visible
+    if (window.loadDashboard) {
+        window.loadDashboard();
+    }
+};
+
+// Reset to NC defaults
+window.resetRequirements = function() {
+    localStorage.removeItem('hour_requirements');
+    
+    const totalEl = document.getElementById('req-total');
+    const nightEl = document.getElementById('req-night');
+    const weeklyEl = document.getElementById('req-weekly');
+    
+    if (totalEl) totalEl.value = DEFAULT_REQUIREMENTS.totalHours;
+    if (nightEl) nightEl.value = DEFAULT_REQUIREMENTS.nightHours;
+    if (weeklyEl) weeklyEl.value = DEFAULT_REQUIREMENTS.weeklyHours;
+    
+    console.log('Requirements reset to NC defaults');
+    
+    // Refresh dashboard
+    if (window.loadDashboard) {
+        window.loadDashboard();
+    }
+};
+
 // Load settings page data - called directly from nav button onclick
 window.loadSettingsData = function() {
     setTimeout(() => {
@@ -15,6 +83,16 @@ window.loadSettingsData = function() {
             statusEl.textContent = isPremium ? '⭐ Premium' : 'Free';
             statusEl.style.color = isPremium ? '#FFD700' : 'white';
         }
+        
+        // Populate hour requirement inputs with current values
+        const reqs = window.getRequirements();
+        const totalEl = document.getElementById('req-total');
+        const nightEl = document.getElementById('req-night');
+        const weeklyEl = document.getElementById('req-weekly');
+        
+        if (totalEl) totalEl.value = reqs.totalHours;
+        if (nightEl) nightEl.value = reqs.nightHours;
+        if (weeklyEl) weeklyEl.value = reqs.weeklyHours;
         
         // Update data summary and delete button
         if (window.updateSettingsDisplay) {

@@ -124,10 +124,11 @@ window.loadDashboard = function() {
         weeklyHours: 0
     };
     
-    // Update progress bars and values
-    updateStat('total', stats.totalHours, 60);
-    updateStat('night', stats.nightHours, 10);
-    updateStat('weekly', stats.weeklyHours, 10);
+    // Update progress bars and values using dynamic requirements
+    const reqs = window.getRequirements ? window.getRequirements() : { totalHours: 60, nightHours: 10, weeklyHours: 10 };
+    updateStat('total', stats.totalHours, reqs.totalHours);
+    updateStat('night', stats.nightHours, reqs.nightHours);
+    updateStat('weekly', stats.weeklyHours, reqs.weeklyHours);
     
     // Check if there's an active drive to restore
     restoreDriveState();
@@ -136,7 +137,7 @@ window.loadDashboard = function() {
 };
 
 function updateStat(type, current, max) {
-    const percentage = Math.min((current / max) * 100, 100);
+    const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
     const progressBar = document.getElementById(`${type}-progress`);
     const valueDisplay = document.getElementById(`${type}-hours`);
     
@@ -145,7 +146,7 @@ function updateStat(type, current, max) {
     }
     
     if (valueDisplay) {
-        valueDisplay.textContent = current.toFixed(1) + 'h';
+        valueDisplay.textContent = `${current.toFixed(1)}/${max}h`;
     }
 }
 
