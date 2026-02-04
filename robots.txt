@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /trips
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://loglegends.org/sitemap.xml

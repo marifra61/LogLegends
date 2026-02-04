@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | LogLegends Support</title>
+  <meta name="description" content="Get help with LogLegends. Contact our support team for questions about the driving log app, account issues, or feature requests.">
+  <meta name="keywords" content="LogLegends support, driving log help, contact LogLegends, teen driving app support">
+  <meta property="og:title" content="Contact LogLegends Support">
+  <meta property="og:description" content="Get help with LogLegends driving log app. Reach our support team for questions or feedback.">
+  <meta property="og:url" content="https://loglegends.org/contact">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://loglegends.org/contact">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Bricolage+Grotesque:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--green:#22c55e;--green-d:#16a34a;--navy:#0b1120;--slate:#141c2e;--card:#1a2336;--gray:#8896ab;--text:#c5cfde;--white:#f0f4f8;--radius:14px}
+    body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--navy);line-height:1.7;-webkit-font-smoothing:antialiased}
+    a{color:var(--green);text-decoration:none;transition:color .2s}
+    a:hover{color:var(--white)}
+    nav{background:rgba(11,17,32,.92);backdrop-filter:blur(16px);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.06)}
+    .nav-logo{color:var(--white);font-family:'Bricolage Grotesque',sans-serif;font-size:1.3rem;text-decoration:none;font-weight:800}
+    .nav-links{display:flex;gap:1.8rem;align-items:center}
+    .nav-links a{color:var(--gray);font-size:.92rem;font-weight:500;text-decoration:none}
+    .nav-links a:hover,.nav-links a.active{color:var(--green)}
+    .nav-cta{background:var(--green)!important;color:var(--navy)!important;padding:.45rem 1.1rem;border-radius:8px;font-weight:600;font-size:.88rem}
+    .mobile-menu{display:none;background:none;border:none;color:var(--white);font-size:1.5rem;cursor:pointer}
+    .hero{background:linear-gradient(160deg,var(--navy),var(--slate) 50%,var(--navy));padding:5rem 2rem 4rem;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(34,197,94,.08),transparent 70%);pointer-events:none}
+    .hero h1{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(2rem,5vw,3rem);color:var(--white);margin-bottom:.8rem;font-weight:800;position:relative}
+    .hero h1 span{color:var(--green)}
+    .hero p{font-size:1.15rem;color:var(--gray);max-width:560px;margin:0 auto;position:relative}
+
+    .contact-grid{max-width:900px;margin:0 auto;padding:3.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;gap:2.5rem}
+
+    .contact-info h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.6rem;color:var(--white);margin-bottom:1rem;font-weight:700}
+    .contact-info p{margin-bottom:1rem;font-size:1rem}
+    .contact-method{background:var(--card);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,.05);display:flex;gap:1rem;align-items:center}
+    .contact-method .icon{width:44px;height:44px;background:linear-gradient(135deg,var(--green),#34d399);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+    .contact-method h3{font-size:1rem;color:var(--white);margin-bottom:.15rem;font-weight:600}
+    .contact-method p{margin:0;font-size:.9rem;color:var(--gray)}
+
+    .contact-form h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.6rem;color:var(--white);margin-bottom:1rem;font-weight:700}
+    .form-group{margin-bottom:1rem}
+    .form-group label{display:block;font-size:.88rem;font-weight:500;color:var(--gray);margin-bottom:.35rem}
+    .form-group input,.form-group textarea,.form-group select{width:100%;padding:.7rem .9rem;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--white);font-family:'Outfit',sans-serif;font-size:.95rem;transition:border-color .2s;outline:none}
+    .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--green)}
+    .form-group textarea{resize:vertical;min-height:120px}
+    .form-group select option{background:var(--card);color:var(--white)}
+    .submit-btn{width:100%;padding:.75rem;background:var(--green);color:var(--navy);border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 0 20px rgba(34,197,94,.15)}
+    .submit-btn:hover{background:var(--green-d);transform:translateY(-1px);box-shadow:0 0 28px rgba(34,197,94,.25)}
+    .form-note{font-size:.82rem;color:var(--gray);margin-top:.6rem;text-align:center}
+
+    /* FAQ */
+    .faq-section{max-width:900px;margin:0 auto;padding:0 2rem 3.5rem}
+    .faq-section h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;text-align:center;margin-bottom:1.5rem;color:var(--white)}
+    .faq-item{background:var(--card);border-radius:var(--radius);margin-bottom:.8rem;border:1px solid rgba(255,255,255,.05);overflow:hidden}
+    .faq-q{padding:1.1rem 1.3rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500;color:var(--white);font-size:.98rem;user-select:none}
+    .faq-q:hover{color:var(--green)}
+    .faq-arrow{transition:transform .2s;font-size:.8rem;color:var(--gray)}
+    .faq-a{padding:0 1.3rem;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;font-size:.94rem;color:var(--gray);line-height:1.6}
+    .faq-item.open .faq-a{max-height:200px;padding:0 1.3rem 1.1rem}
+    .faq-item.open .faq-arrow{transform:rotate(180deg)}
+
+    footer{background:var(--navy);border-top:1px solid rgba(255,255,255,.05);color:var(--gray);padding:2rem;text-align:center;font-size:.88rem}
+    .footer-links{display:flex;justify-content:center;gap:1.5rem;margin-bottom:.8rem;flex-wrap:wrap}
+    .footer-links a{color:var(--gray);font-weight:500}
+    .footer-links a:hover{color:var(--green)}
+    @media(max-width:768px){
+      .nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:var(--navy);flex-direction:column;padding:1rem 2rem;border-bottom:1px solid rgba(255,255,255,.06)}
+      .nav-links.open{display:flex}
+      .mobile-menu{display:block}
+      .contact-grid{grid-template-columns:1fr;padding:2.5rem 1.5rem}
+      .faq-section{padding:0 1.5rem 2.5rem}
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-logo">&#x1F697; LogLegends</a>
+    <div class="nav-links" id="navLinks">
+      <a href="/about">About</a>
+      <a href="/features">Features</a>
+      <a href="/contact" class="active">Contact</a>
+      <a href="/" class="nav-cta">Open App</a>
+    </div>
+    <button class="mobile-menu" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">&#9776;</button>
+  </nav>
+
+  <div class="hero">
+    <h1>Get in <span>Touch</span></h1>
+    <p>Have a question, found a bug, or want to request a feature? We'd love to hear from you.</p>
+  </div>
+
+  <div class="contact-grid">
+    <div class="contact-info">
+      <h2>Contact Info</h2>
+      <p>We typically respond within 24 hours on business days.</p>
+
+      <div class="contact-method">
+        <div class="icon">&#x1F4E7;</div>
+        <div>
+          <h3>Email</h3>
+          <p>support@loglegends.org</p>
+        </div>
+      </div>
+
+      <div class="contact-method">
+        <div class="icon">&#x1F4AC;</div>
+        <div>
+          <h3>In-App Support</h3>
+          <p>Settings &#8594; Help &amp; Support</p>
+        </div>
+      </div>
+
+      <div class="contact-method">
+        <div class="icon">&#x1F4CD;</div>
+        <div>
+          <h3>Location</h3>
+          <p>Fuquay-Varina, North Carolina</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="contact-form">
+      <h2>Send a Message</h2>
+      <form id="contactForm" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="topic">Topic</label>
+          <select id="topic" name="topic">
+            <option value="general">General Question</option>
+            <option value="bug">Bug Report</option>
+            <option value="feature">Feature Request</option>
+            <option value="account">Account Issue</option>
+            <option value="premium">Premium / Billing</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="Tell us what's on your mind..." required></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Send Message</button>
+        <p class="form-note">Or email us directly at support@loglegends.org</p>
+      </form>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Is LogLegends really free?<span class="faq-arrow">&#9660;</span></div>
+      <div class="faq-a">Yes! All core features including drive tracking, night hour detection, and PDF reports are completely free. Premium features like cloud sync are available as an optional upgrade.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Does it work in my state?<span class="faq-arrow">&#9660;</span></div>
+      <div class="faq-a">LogLegends defaults to North Carolina requirements (60 total hours, 10 night hours), but you can customize the hour goals in Settings to match any state's graduated licensing requirements.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Do I need to download anything?<span class="faq-arrow">&#9660;</span></div>
+      <div class="faq-a">No app store download is required. LogLegends is a Progressive Web App that runs in your browser. You can add it to your home screen for quick access like a native app.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Is my GPS data private?<span class="faq-arrow">&#9660;</span></div>
+      <div class="faq-a">Absolutely. GPS data is only collected while you're actively tracking a drive. It's stored locally on your device by default. We never sell or share your location data. See our <a href="/privacy">Privacy Policy</a> for full details.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can my parent and I both see the driving log?<span class="faq-arrow">&#9660;</span></div>
+      <div class="faq-a">With Premium cloud sync, driving data syncs across devices so both parent and teen can view the same log from different phones. On the free tier, data stays on whichever device records the drive.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Will the DMV accept a LogLegends PDF report?<span class="faq-arrow">&#9660;</span></div>
+      <div class="faq-a">Our PDF reports include all the information typically required: dates, times, durations, and hour breakdowns. Requirements vary by DMV office, so check with your local office about accepted documentation formats.</div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="/about">About</a>
+      <a href="/features">Features</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+    <p>&#169; 2026 LogLegends. Built for new drivers everywhere.</p>
+  </footer>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      var name = document.getElementById('name').value;
+      var email = document.getElementById('email').value;
+      var topic = document.getElementById('topic').value;
+      var message = document.getElementById('message').value;
+      var subject = encodeURIComponent('LogLegends ' + topic + ' from ' + name);
+      var body = encodeURIComponent('From: ' + name + ' (' + email + ')\nTopic: ' + topic + '\n\n' + message);
+      window.location.href = 'mailto:support@loglegends.org?subject=' + subject + '&body=' + body;
+    }
+  </script>
+</body>
+</html>
