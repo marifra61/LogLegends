@@ -1,4 +1,5 @@
 // Settings Page Functionality
+// Updated: Free model + Support/Tip button
 
 // Default requirements (North Carolina)
 const DEFAULT_REQUIREMENTS = {
@@ -74,15 +75,9 @@ window.loadSettingsData = function() {
         // Update user info
         const nameEl = document.getElementById('settings-name');
         const emailEl = document.getElementById('settings-email');
-        const statusEl = document.getElementById('settings-status');
         
         if (nameEl) nameEl.textContent = localStorage.getItem('log_name') || 'N/A';
         if (emailEl) emailEl.textContent = localStorage.getItem('log_email') || 'N/A';
-        if (statusEl) {
-            const isPremium = localStorage.getItem('premium_user') === 'true';
-            statusEl.textContent = isPremium ? '⭐ Premium' : 'Free';
-            statusEl.style.color = isPremium ? '#FFD700' : 'white';
-        }
         
         // Populate hour requirement inputs with current values
         const reqs = window.getRequirements();
@@ -99,8 +94,45 @@ window.loadSettingsData = function() {
             window.updateSettingsDisplay();
         }
         
+        // Update support section
+        updateSupportSection();
+        
         console.log('Settings data loaded');
     }, 100);
+};
+
+// Update the Support LogLegends section based on tip status
+function updateSupportSection() {
+    const supportSection = document.getElementById('support-section');
+    const supportBtn = document.getElementById('support-btn');
+    const supportStatus = document.getElementById('support-status');
+    
+    if (!supportSection) return;
+    
+    const hasTipped = localStorage.getItem('ll_has_tipped') === 'true';
+    
+    if (hasTipped) {
+        // User has already tipped - show thank you state
+        if (supportBtn) supportBtn.style.display = 'none';
+        if (supportStatus) {
+            supportStatus.style.display = 'block';
+            supportStatus.innerHTML = '💚 Thank you for your support!';
+        }
+    } else {
+        // User hasn't tipped - show support button
+        if (supportBtn) supportBtn.style.display = 'inline-flex';
+        if (supportStatus) supportStatus.style.display = 'none';
+    }
+}
+
+// Open support/tip modal from settings
+window.openSupportModal = function() {
+    if (typeof TipSystem !== 'undefined') {
+        TipSystem.showTipModal('settings');
+    } else {
+        console.error('TipSystem not loaded');
+        alert('Support system not available. Please refresh the page.');
+    }
 };
 
 // Delete all data with multiple safeguards
@@ -146,15 +178,7 @@ This is your LAST CHANCE to save this data.
 Export PDF before deleting?`);
     
     if (exportFirst) {
-        // Check if user has premium (needed for PDF export)
-        const isPremium = window.isPremiumUser ? window.isPremiumUser() : false;
-        
-        if (!isPremium) {
-            alert('PDF export requires Premium.\n\nCancelling deletion to protect your data.');
-            return;
-        }
-        
-        // Export PDF first
+        // Export PDF first (no premium check needed - it's free now!)
         if (window.exportToPDF) {
             try {
                 window.exportToPDF();
@@ -310,4 +334,4 @@ window.updateSettingsDisplay = function() {
     }
 };
 
-console.log('Settings module loaded');
+console.log('Settings module loaded (free + tips)');
