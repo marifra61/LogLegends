@@ -30,14 +30,13 @@
             <div id="g_id_signin" style="margin: 20px auto;"></div>
         </div>
 
-        <!-- Sync Status Area with Premium Badge -->
+        <!-- Sync Status Area -->
         <div id="sync-status-area" style="display:none;" class="collapsed">
             <button id="close-sync-btn" onclick="toggleSyncModal()" style="display:none;">×</button>
             <div id="user-info" onclick="toggleSyncModal()"></div>
             <div id="sync-time"></div>
             <div id="sync-controls" style="display:none;">
                 <button onclick="pushToCloud()" style="background: #00e5ff; color: #000;">Sync</button>
-                
                 <button onclick="logoutUser()" style="background: #ff4444; color: white;">Logout</button>
             </div>
         </div>
@@ -130,7 +129,6 @@
                 <div style="color: white; font-size: 1rem; line-height: 1.8;">
                     <p><strong>Name:</strong> <span id="settings-name">Loading...</span></p>
                     <p><strong>Email:</strong> <span id="settings-email">Loading...</span></p>
-                    
                 </div>
             </div>
 
@@ -226,20 +224,34 @@
                 </div>
             </div>
 
-            <!-- Support LogLegends Section -->
-<div id="support-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center;">
-    <h3 style="color: white; margin: 0 0 8px 0; font-size: 1.1rem;">💚 Support LogLegends</h3>
-    <p style="color: rgba(255,255,255,0.9); margin: 0 0 15px 0; font-size: 0.9rem;">This app is 100% free. Tips help cover development costs.</p>
-    <button id="support-btn" onclick="openSupportModal()" style="background: white; color: #667eea; border: none; padding: 12px 28px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;">☕ Leave a Tip</button>
-    <div id="support-status" style="display: none; background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 10px; color: white; font-weight: 600;">💚 Thank you for your support!</div>
-</div>
+            <!-- Support LogLegends Section (replaces Premium) -->
+            <div id="support-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                <h3 style="color: white; margin: 0 0 8px 0; font-size: 1.1rem;">💚 Support LogLegends</h3>
+                <p style="color: rgba(255,255,255,0.9); margin: 0 0 15px 0; font-size: 0.9rem;">
+                    This app is 100% free. Tips help cover development costs.
+                </p>
+                <button id="support-btn" onclick="openSupportModal()" style="
+                    background: white;
+                    color: #667eea;
+                    border: none;
+                    padding: 12px 28px;
+                    border-radius: 10px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                ">☕ Leave a Tip</button>
+                <div id="support-status" style="display: none; background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 10px; color: white; font-weight: 600; margin-top: 10px;">
+                    💚 Thank you for your support!
+                </div>
+            </div>
 
             <!-- Help Section -->
             <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                 <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Help & Support</h3>
                 <div style="color: white; font-size: 0.95rem; line-height: 1.8;">
-                    <p>📧 <strong>Email:</strong> frank@marifradesigns.com</p>
-                    <p>📖 <strong>Version:</strong> 1.0.0</p>
+                    <p>📧 <strong>Email:</strong> support@loglegends.org</p>
+                    <p>📖 <strong>Version:</strong> 1.1.0</p>
                 </div>
             </div>
 
@@ -390,17 +402,16 @@
     <script src="profile.js"></script>
     <script src="pdf-export.js"></script>
     <script src="settings.js"></script>
-	<script src="tips.js"></script>
+    <script src="tips.js"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed'));
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed:', err));
             });
         }
     </script>
-	<script src="tips.js"></script>
 </body>
 </html>
