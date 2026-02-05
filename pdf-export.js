@@ -1,19 +1,8 @@
 // PDF Export functionality for driving logs (DMV-ready format)
-
-// Check if user has premium access (for freemium gate)
-function hasPremiumAccess() {
-    const premiumStatus = localStorage.getItem('premium_user');
-    return premiumStatus === 'true';
-}
+// Updated: Free for all users + tip prompt after export
 
 // Main PDF export function
 window.exportToPDF = async function() {
-    // Check premium status (will be gated in freemium setup)
-    if (!hasPremiumAccess()) {
-        showPremiumModal();
-        return;
-    }
-    
     try {
         // Get all data
         const data = window.exportAllData ? window.exportAllData() : null;
@@ -213,7 +202,16 @@ window.exportToPDF = async function() {
         doc.save(filename);
         
         console.log('PDF exported successfully:', filename);
-        alert('✅ PDF exported successfully!');
+        
+        // Show success message
+        showExportSuccess();
+        
+        // Show tip prompt after successful export (1.5 second delay)
+        if (typeof TipSystem !== 'undefined') {
+            setTimeout(() => {
+                TipSystem.showTipModal('pdf_export');
+            }, 1500);
+        }
         
     } catch (error) {
         console.error('PDF export error:', error);
@@ -221,87 +219,48 @@ window.exportToPDF = async function() {
     }
 };
 
-// Show premium modal (for non-premium users)
-function showPremiumModal() {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
+// Show export success toast (non-blocking)
+function showExportSuccess() {
+    const toast = document.createElement('div');
+    toast.innerHTML = '✅ PDF exported successfully!';
+    toast.style.cssText = `
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        padding: 20px;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #10b981;
+        color: white;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        z-index: 9999;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        animation: toastIn 0.3s ease;
     `;
     
-    modal.innerHTML = `
-        <div style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 30px;
-            border-radius: 20px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        ">
-            <h2 style="color: white; font-size: 2rem; margin-bottom: 15px;">✨ Premium Feature</h2>
-            <p style="color: white; font-size: 1.1rem; margin-bottom: 25px; opacity: 0.9;">
-                PDF export is available with LogLegends Premium
-            </p>
-            <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                <p style="color: white; font-weight: bold; margin-bottom: 10px;">Premium includes:</p>
-                <p style="color: white; font-size: 0.95rem; margin: 8px 0;">✅ DMV-ready PDF exports</p>
-                <p style="color: white; font-size: 0.95rem; margin: 8px 0;">✅ Unlimited cloud storage</p>
-                <p style="color: white; font-size: 0.95rem; margin: 8px 0;">✅ Advanced route analytics</p>
-                <p style="color: white; font-size: 0.95rem; margin: 8px 0;">✅ Priority support</p>
-            </div>
-            <button onclick="upgradeToPremium()" style="
-                background: white;
-                color: #667eea;
-                border: none;
-                padding: 15px 40px;
-                border-radius: 12px;
-                font-size: 1.1rem;
-                font-weight: bold;
-                cursor: pointer;
-                margin-bottom: 10px;
-                width: 100%;
-            ">Upgrade to Premium</button>
-            <button onclick="this.closest('div').parentElement.remove()" style="
-                background: transparent;
-                color: white;
-                border: 2px solid white;
-                padding: 12px 30px;
-                border-radius: 12px;
-                font-size: 1rem;
-                font-weight: bold;
-                cursor: pointer;
-                width: 100%;
-            ">Maybe Later</button>
-        </div>
-    `;
+    // Add animation keyframes if not exists
+    if (!document.getElementById('toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            @keyframes toastIn {
+                from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
-    document.body.appendChild(modal);
+    document.body.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
-// Temporary function to enable premium (will be replaced with payment processing)
-window.upgradeToPremium = function() {
-    // Close modal
-    const modals = document.querySelectorAll('body > div');
-    modals.forEach(modal => {
-        if (modal.style.position === 'fixed' && modal.style.zIndex === '10000') {
-            modal.remove();
-        }
-    });
-    
-    // Navigate to upgrade page (placeholder)
-    alert('This will redirect to the payment page.\n\nFor now, upgrading to premium for testing...');
-    localStorage.setItem('premium_user', 'true');
-    alert('✅ Premium activated! You can now export PDFs.');
-};
-
-console.log('PDF export module loaded');
+console.log('PDF export module loaded (free + tips)');

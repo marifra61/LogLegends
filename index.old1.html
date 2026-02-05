@@ -134,90 +134,6 @@
                 </div>
             </div>
 
-            <!-- Hour Requirements Section -->
-            <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 5px;">Hour Requirements</h3>
-                <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 18px;">
-                    Adjust to match your state's requirements. Default: North Carolina.
-                </p>
-
-                <!-- Total Hours -->
-                <div style="margin-bottom: 16px;">
-                    <label for="req-total" style="color: white; font-size: 0.95rem; display: block; margin-bottom: 6px;">
-                        Total Hours Required
-                    </label>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="number" id="req-total" min="0" max="500" step="1" value="60" style="
-                            flex: 1;
-                            background: rgba(255,255,255,0.1);
-                            border: 1px solid rgba(0,229,255,0.3);
-                            border-radius: 8px;
-                            color: white;
-                            padding: 12px 14px;
-                            font-size: 1.1rem;
-                            outline: none;
-                            -webkit-appearance: none;
-                        " onchange="saveRequirements()">
-                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem; min-width: 40px;">hours</span>
-                    </div>
-                </div>
-
-                <!-- Night Hours -->
-                <div style="margin-bottom: 16px;">
-                    <label for="req-night" style="color: white; font-size: 0.95rem; display: block; margin-bottom: 6px;">
-                        Night Hours Required
-                    </label>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="number" id="req-night" min="0" max="500" step="1" value="10" style="
-                            flex: 1;
-                            background: rgba(255,255,255,0.1);
-                            border: 1px solid rgba(255,107,53,0.3);
-                            border-radius: 8px;
-                            color: white;
-                            padding: 12px 14px;
-                            font-size: 1.1rem;
-                            outline: none;
-                            -webkit-appearance: none;
-                        " onchange="saveRequirements()">
-                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem; min-width: 40px;">hours</span>
-                    </div>
-                </div>
-
-                <!-- Weekly Hours -->
-                <div style="margin-bottom: 16px;">
-                    <label for="req-weekly" style="color: white; font-size: 0.95rem; display: block; margin-bottom: 6px;">
-                        Weekly Hours Goal
-                    </label>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="number" id="req-weekly" min="0" max="500" step="1" value="10" style="
-                            flex: 1;
-                            background: rgba(255,255,255,0.1);
-                            border: 1px solid rgba(0,230,118,0.3);
-                            border-radius: 8px;
-                            color: white;
-                            padding: 12px 14px;
-                            font-size: 1.1rem;
-                            outline: none;
-                            -webkit-appearance: none;
-                        " onchange="saveRequirements()">
-                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem; min-width: 40px;">hours</span>
-                    </div>
-                </div>
-
-                <!-- Reset to defaults -->
-                <button onclick="resetRequirements()" style="
-                    width: 100%;
-                    background: transparent;
-                    border: 1px solid rgba(255,255,255,0.2);
-                    color: rgba(255,255,255,0.6);
-                    padding: 10px;
-                    border-radius: 8px;
-                    font-size: 0.9rem;
-                    cursor: pointer;
-                    margin-top: 5px;
-                ">Reset to NC Defaults (60 / 10 / 10)</button>
-            </div>
-
             <!-- Data Summary Section -->
             <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                 <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Your Driving Data</h3>
@@ -409,6 +325,5 @@
             });
         }
     </script>
-	<script src="tips.js"></script>
 </body>
 </html>
