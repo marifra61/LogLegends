@@ -1,5 +1,5 @@
 // Settings Page Functionality
-// Updated: Free model + Support/Tip button
+// Updated: Free model + Support/Tip button + Mobile PWA cache-busting deletion
 
 // Default requirements (North Carolina)
 const DEFAULT_REQUIREMENTS = {
@@ -236,51 +236,100 @@ Are you ABSOLUTELY SURE?`);
     performDeletion();
 }
 
-function performDeletion() {
+async function performDeletion() {
     try {
         console.log('Starting data deletion...');
         
+        // ============================================
+        // STEP 1: Delete all driving data from localStorage
+        // ============================================
+        
         // Delete main driving stats
         localStorage.removeItem('driving_stats');
+        console.log('✓ Removed driving_stats');
         
         // Delete safety check status
         localStorage.removeItem('safety_check_complete');
+        console.log('✓ Removed safety_check_complete');
         
         // Delete active drive state
         localStorage.removeItem('active_drive');
+        console.log('✓ Removed active_drive');
         
         // Delete all route data
         const keysToDelete = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith('route_')) {
+            if (key && (key.startsWith('route_') || key.startsWith('trip_'))) {
                 keysToDelete.push(key);
             }
         }
         
         keysToDelete.forEach(key => {
             localStorage.removeItem(key);
+            console.log('✓ Removed', key);
         });
         
-        console.log('Deleted', keysToDelete.length, 'route files');
-        console.log('All driving data deleted successfully');
+        // Delete sync markers
+        localStorage.removeItem('last_sync_time');
+        localStorage.removeItem('sync_data');
         
-        // Show success message
-        alert(`✅ All Data Deleted
+        console.log('✓ All localStorage data deleted');
+        
+        // ============================================
+        // STEP 2: Clear Service Worker Cache (for PWA)
+        // ============================================
+        
+        if ('caches' in window) {
+            try {
+                const cacheNames = await caches.keys();
+                console.log('Found caches:', cacheNames);
+                
+                for (const cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    console.log('✓ Deleted cache:', cacheName);
+                }
+                console.log('✓ All caches cleared');
+            } catch (cacheError) {
+                console.log('Cache clear error (non-fatal):', cacheError);
+            }
+        }
+        
+        // ============================================
+        // STEP 3: Unregister Service Worker
+        // ============================================
+        
+        if ('serviceWorker' in navigator) {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                    console.log('✓ Service worker unregistered');
+                }
+            } catch (swError) {
+                console.log('SW unregister error (non-fatal):', swError);
+            }
+        }
+        
+        // ============================================
+        // STEP 4: Show success and reload
+        // ============================================
+        
+        alert(`✅ All Data Deleted Successfully!
 
 • ${keysToDelete.length} route files removed
-• Driving stats cleared
-• Active drive cleared
-• Safety checklist reset
+• All driving stats cleared
+• App cache cleared
 
-You can now start fresh!`);
+The app will now restart fresh.`);
         
-        // Reload the app to reset everything
-        location.reload();
+        // Force hard reload - bypass all caches
+        // This works on mobile PWAs
+        window.location.replace(window.location.origin + window.location.pathname);
         
     } catch (error) {
         console.error('Error during deletion:', error);
-        alert('❌ Error deleting data.\n\nSome data may not have been deleted. Please try again or contact support.');
+        alert('❌ Error deleting data: ' + error.message + '\n\nPlease try again.');
     }
 }
 
@@ -292,7 +341,7 @@ window.getDataSummary = function() {
     let routeCount = 0;
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith('route_')) {
+        if (key && key.startsWith('route_')) {
             routeCount++;
         }
     }
@@ -334,4 +383,4 @@ window.updateSettingsDisplay = function() {
     }
 };
 
-console.log('Settings module loaded (free + tips)');
+console.log('Settings module loaded (with PWA cache-busting deletion)');
