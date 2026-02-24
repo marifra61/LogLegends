@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loglegends-v9'; // New domain paths
+const CACHE_NAME = 'loglegends-v10'; // New domain paths
 const urlsToCache = [
   '/',
   '/index.html',
