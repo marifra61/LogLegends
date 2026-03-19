@@ -1,23 +1,30 @@
-// Dashboard functionality with Firebase-compatible GPS tracking
+// Dashboard functionality with Battery Saver Mode support
 
 let driveStartTime = null;
 let driveInterval = null;
 let startLocation = null;
 let wakeLock = null;
 
-// Request wake lock to keep screen on
+// Check if battery saver is enabled
+function isBatterySaver() {
+    return localStorage.getItem('battery_saver') === 'true';
+}
+
+// Request wake lock (skipped in battery saver mode)
 async function requestWakeLock() {
+    if (isBatterySaver()) {
+        console.log('Battery Saver ON - skipping wake lock');
+        return;
+    }
+    
     try {
         if ('wakeLock' in navigator) {
             wakeLock = await navigator.wakeLock.request('screen');
-            console.log('Wake Lock activated - screen will stay on');
+            console.log('Wake Lock activated');
             
-            // Re-request if wake lock is released (e.g., user switches tabs)
             wakeLock.addEventListener('release', () => {
                 console.log('Wake Lock released');
             });
-        } else {
-            console.log('Wake Lock API not supported');
         }
     } catch (err) {
         console.error('Wake Lock error:', err);
@@ -37,7 +44,7 @@ async function releaseWakeLock() {
     }
 }
 
-// Save active drive state to localStorage
+// Save active drive state
 function saveDriveState() {
     if (driveStartTime) {
         const driveState = {
@@ -50,7 +57,7 @@ function saveDriveState() {
     }
 }
 
-// Restore active drive state from localStorage
+// Restore active drive state
 function restoreDriveState() {
     const savedState = localStorage.getItem('active_drive');
     if (savedState) {
@@ -59,7 +66,6 @@ function restoreDriveState() {
             driveStartTime = new Date(driveState.startTime);
             startLocation = driveState.startLocation;
             
-            // Update UI to show drive in progress
             const startBtn = document.getElementById('start-drive-btn');
             const safetyStatus = document.getElementById('safety-status');
             
@@ -77,15 +83,13 @@ function restoreDriveState() {
                 safetyStatus.onclick = null;
             }
             
-            // Start timer
             driveInterval = setInterval(updateTimer, 1000);
-            updateTimer(); // Update immediately
+            updateTimer();
             
-            // Reactivate wake lock
             requestWakeLock();
             
-            // Show map if we have location
-            if (startLocation) {
+            // Only show map if NOT in battery saver mode
+            if (!isBatterySaver() && startLocation) {
                 const mapPlaceholder = document.querySelector('.map-placeholder');
                 if (mapPlaceholder) {
                     mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
@@ -99,10 +103,22 @@ function restoreDriveState() {
                         }
                     }, 100);
                 }
+            } else if (isBatterySaver()) {
+                // Show battery saver indicator
+                const mapPlaceholder = document.querySelector('.map-placeholder');
+                if (mapPlaceholder) {
+                    mapPlaceholder.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+                            <p style="font-size: 40px; margin: 0;">🔋</p>
+                            <p style="margin: 10px 0 5px; font-weight: bold; color: #00e676;">Battery Saver Active</p>
+                            <small>GPS recording in background</small>
+                        </div>
+                    `;
+                }
             }
             
-            console.log('Drive state restored - continuing from', driveStartTime);
-            alert('Drive resumed! Your timer was preserved.');
+            console.log('Drive state restored');
+            alert('Drive resumed!');
         } catch (error) {
             console.error('Error restoring drive state:', error);
             localStorage.removeItem('active_drive');
@@ -110,13 +126,13 @@ function restoreDriveState() {
     }
 }
 
-// Clear drive state from localStorage
+// Clear drive state
 function clearDriveState() {
     localStorage.removeItem('active_drive');
     console.log('Drive state cleared');
 }
 
-// Load and display dashboard stats
+// Load dashboard stats
 window.loadDashboard = function() {
     const stats = window.getStats ? window.getStats() : {
         totalHours: 0,
@@ -124,13 +140,11 @@ window.loadDashboard = function() {
         weeklyHours: 0
     };
     
-    // Update progress bars and values using dynamic requirements
     const reqs = window.getRequirements ? window.getRequirements() : { totalHours: 60, nightHours: 10, weeklyHours: 10 };
     updateStat('total', stats.totalHours, reqs.totalHours);
     updateStat('night', stats.nightHours, reqs.nightHours);
     updateStat('weekly', stats.weeklyHours, reqs.weeklyHours);
     
-    // Check if there's an active drive to restore
     restoreDriveState();
     
     console.log('Dashboard loaded:', stats);
@@ -150,9 +164,8 @@ function updateStat(type, current, max) {
     }
 }
 
-// Start a driving session with GPS tracking
+// Start driving session
 window.startDrive = function() {
-    // Check if safety check is complete
     const safetyComplete = localStorage.getItem('safety_check_complete');
     if (safetyComplete !== 'true') {
         alert('Please complete the safety checklist first!');
@@ -166,35 +179,49 @@ window.startDrive = function() {
     const safetyStatus = document.getElementById('safety-status');
     
     if (driveStartTime) {
-        // Stop the drive - IMMEDIATE UI FEEDBACK
+        // Stop the drive
         startBtn.disabled = true;
         startBtn.textContent = 'STOPPING...';
         startBtn.style.opacity = '0.6';
-        
-        // Then stop the drive in background
         stopDrive();
     } else {
         // Start the drive
         driveStartTime = new Date();
         
-        // Request wake lock to keep screen on
         requestWakeLock();
         
-        // Replace map placeholder with actual map
         const mapPlaceholder = document.querySelector('.map-placeholder');
-        if (mapPlaceholder) {
-            mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
-            
-            // Initialize map after DOM update
-            setTimeout(() => {
-                if (window.initMap) {
-                    window.initMap();
-                }
-            }, 100);
+        
+        // Only show live map if NOT in battery saver mode
+        if (!isBatterySaver()) {
+            if (mapPlaceholder) {
+                mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
+                
+                setTimeout(() => {
+                    if (window.initMap) {
+                        window.initMap();
+                    }
+                }, 100);
+            }
+        } else {
+            // Show battery saver indicator
+            if (mapPlaceholder) {
+                mapPlaceholder.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+                        <p style="font-size: 40px; margin: 0;">🔋</p>
+                        <p style="margin: 10px 0 5px; font-weight: bold; color: #00e676;">Battery Saver Active</p>
+                        <small>GPS recording in background</small>
+                    </div>
+                `;
+            }
         }
         
-        // Get GPS location and start tracking
+        // Get GPS location
         if (navigator.geolocation) {
+            const gpsOptions = isBatterySaver() 
+                ? { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+                : { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+            
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     startLocation = {
@@ -203,28 +230,28 @@ window.startDrive = function() {
                     };
                     console.log('Start location:', startLocation);
                     
-                    // Save drive state to localStorage
                     saveDriveState();
                     
-                    // Start route tracking
-                    if (window.startRouteTracking) {
+                    // Only start visual tracking if not in battery saver
+                    if (!isBatterySaver() && window.startRouteTracking) {
                         window.startRouteTracking(startLocation);
+                    } else if (window.startRouteTrackingMinimal) {
+                        // Use minimal tracking for battery saver
+                        window.startRouteTrackingMinimal(startLocation);
                     }
                 },
                 (error) => {
                     console.log('GPS error:', error);
                     startLocation = null;
-                    // Still save drive state even without GPS
                     saveDriveState();
                     alert('⚠️ GPS not available. Drive will be recorded without location data.');
-                }
+                },
+                gpsOptions
             );
         } else {
-            // Save drive state even without GPS
             saveDriveState();
         }
         
-        // Update UI
         if (startBtn) {
             startBtn.textContent = 'STOP DRIVE';
             startBtn.classList.add('active');
@@ -237,44 +264,41 @@ window.startDrive = function() {
             safetyStatus.onclick = null;
         }
         
-        // Start timer
         driveInterval = setInterval(updateTimer, 1000);
         
-        console.log('Drive started at', driveStartTime);
+        console.log('Drive started at', driveStartTime, isBatterySaver() ? '(Battery Saver ON)' : '');
     }
 };
 
 function stopDrive() {
     if (!driveStartTime) return;
     
-    // Prevent multiple executions
     const endTime = new Date();
     const durationMs = endTime - driveStartTime;
     const durationHours = durationMs / (1000 * 60 * 60);
     
-    // Clear start time immediately to prevent double-stop
     const savedStartTime = driveStartTime;
     driveStartTime = null;
     
-    // Get end location with TIMEOUT
+    const gpsOptions = isBatterySaver()
+        ? { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
+        : { timeout: 3000, maximumAge: 0, enableHighAccuracy: true };
+    
     if (navigator.geolocation) {
         let locationReceived = false;
         
-        // Set 3-second timeout for GPS
         const gpsTimeout = setTimeout(() => {
             if (!locationReceived) {
                 console.log('GPS timeout - stopping without end location');
                 
-                // Stop tracking anyway
                 if (window.stopRouteTracking) {
                     window.stopRouteTracking(null);
                 }
                 
-                // Restore start time for save
                 driveStartTime = savedStartTime;
                 saveTrip(durationHours, null, null);
             }
-        }, 3000);
+        }, 5000);
         
         navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -286,13 +310,11 @@ function stopDrive() {
                     lng: position.coords.longitude
                 };
                 
-                // Stop tracking and get route data
                 let routeData = null;
                 if (window.stopRouteTracking) {
                     routeData = window.stopRouteTracking(endLocation);
                 }
                 
-                // Restore start time for save
                 driveStartTime = savedStartTime;
                 saveTrip(durationHours, endLocation, routeData);
             },
@@ -301,30 +323,22 @@ function stopDrive() {
                 clearTimeout(gpsTimeout);
                 console.log('GPS error on stop:', error);
                 
-                // Stop tracking anyway
                 if (window.stopRouteTracking) {
                     window.stopRouteTracking(null);
                 }
                 
-                // Restore start time for save
                 driveStartTime = savedStartTime;
                 saveTrip(durationHours, null, null);
             },
-            {
-                timeout: 3000,
-                maximumAge: 0,
-                enableHighAccuracy: true
-            }
+            gpsOptions
         );
     } else {
-        // Restore start time for save
         driveStartTime = savedStartTime;
         saveTrip(durationHours, null, null);
     }
 }
 
 function saveTrip(durationHours, endLocation, routeData) {
-    // Create Firebase-compatible trip object
     const trip = {
         id: Date.now(),
         startTime: driveStartTime.toISOString(),
@@ -339,44 +353,36 @@ function saveTrip(durationHours, endLocation, routeData) {
             lat: Number(endLocation.lat.toFixed(6)),
             lng: Number(endLocation.lng.toFixed(6))
         } : null,
-        distance: routeData && routeData.distance ? Number(routeData.distance.toFixed(2)) : null
+        distance: routeData && routeData.distance ? Number(routeData.distance.toFixed(2)) : null,
+        batterySaver: isBatterySaver()
     };
     
-    // Store full route data separately in localStorage for viewing
-    // Don't send to Firebase (too large)
     if (routeData && routeData.points && routeData.points.length > 0) {
-        // Limit route points to reduce size (keep every Nth point for large routes)
         let routePoints = routeData.points;
         if (routePoints.length > 20) {
-            // Keep first, last, and sample points in between
             const step = Math.floor(routePoints.length / 18);
-            const sampledPoints = [routePoints[0]]; // First point
+            const sampledPoints = [routePoints[0]];
             for (let i = step; i < routePoints.length - 1; i += step) {
                 sampledPoints.push(routePoints[i]);
             }
-            sampledPoints.push(routePoints[routePoints.length - 1]); // Last point
+            sampledPoints.push(routePoints[routePoints.length - 1]);
             routePoints = sampledPoints;
         }
         
-        // Round coordinates to 6 decimal places (enough precision)
         const cleanRoute = routePoints.map(point => [
             Number(point[0].toFixed(6)),
             Number(point[1].toFixed(6))
         ]);
         
-        // Store route in separate localStorage key for this trip
         localStorage.setItem(`route_${trip.id}`, JSON.stringify(cleanRoute));
-        
-        // Don't include route in trip object sent to Firebase
-        console.log('Route stored locally with', cleanRoute.length, 'points');
+        console.log('Route stored with', cleanRoute.length, 'points');
     }
     
-    // Add trip to stats (this updates localStorage)
     if (window.addTrip) {
         window.addTrip(trip);
     }
     
-    // Reset UI IMMEDIATELY
+    // Reset UI
     const startBtn = document.getElementById('start-drive-btn');
     const safetyStatus = document.getElementById('safety-status');
     const timerDisplay = document.getElementById('timer-display');
@@ -400,26 +406,19 @@ function saveTrip(durationHours, endLocation, routeData) {
         timerDisplay.textContent = '00:00:00';
     }
     
-    // Clear interval
     if (driveInterval) {
         clearInterval(driveInterval);
         driveInterval = null;
     }
     
-    // Clear drive state from localStorage
     clearDriveState();
-    
-    // Release wake lock
     releaseWakeLock();
     
-    // Reset checklist
     localStorage.removeItem('safety_check_complete');
     
-    // Reset variables
     driveStartTime = null;
     startLocation = null;
     
-    // Clear map and restore placeholder
     if (window.clearMap) {
         window.clearMap();
     }
@@ -434,14 +433,28 @@ function saveTrip(durationHours, endLocation, routeData) {
         `;
     }
     
-    // Reload dashboard stats
+    // Also reset battery saver placeholder
+    const mapPlaceholder = document.querySelector('.map-placeholder');
+    if (!mapPlaceholder) {
+        const driveCard = document.querySelector('.drive-card');
+        if (driveCard) {
+            const placeholder = driveCard.querySelector('div[style*="Battery Saver"]');
+            if (placeholder && placeholder.parentElement) {
+                placeholder.parentElement.innerHTML = `
+                    <div class="map-placeholder">
+                        <p>🗺️</p>
+                        <small>GPS tracking active during drive</small>
+                    </div>
+                `;
+            }
+        }
+    }
+    
     window.loadDashboard();
     
-    // Show summary
     const distanceText = trip.distance ? ` (${trip.distance.toFixed(2)} miles)` : '';
     alert(`Drive complete! Duration: ${durationHours.toFixed(2)} hours${distanceText}`);
     
-    // Push to cloud AFTER showing success message
     console.log('Attempting to sync trip to cloud...');
     if (window.pushToCloud) {
         setTimeout(() => {
@@ -472,8 +485,9 @@ function updateTimer() {
         timerDisplay.textContent = timeStr;
     }
     
-    // Save drive state every 10 seconds to protect against page refresh
-    if (seconds % 10 === 0) {
+    // Save state less frequently in battery saver mode
+    const saveInterval = isBatterySaver() ? 30 : 10;
+    if (seconds % saveInterval === 0) {
         saveDriveState();
     }
 }
@@ -485,12 +499,12 @@ if (document.readyState === 'loading') {
     window.loadDashboard();
 }
 
-// Re-request wake lock when page becomes visible again
+// Re-request wake lock when page visible (skip in battery saver)
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && driveStartTime) {
-        console.log('Page visible again - re-requesting wake lock');
+    if (!document.hidden && driveStartTime && !isBatterySaver()) {
+        console.log('Page visible - re-requesting wake lock');
         requestWakeLock();
     }
 });
 
-console.log('Dashboard module with Firebase-compatible GPS tracking loaded');
+console.log('Dashboard module loaded (with Battery Saver support)');

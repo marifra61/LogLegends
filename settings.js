@@ -1,10 +1,9 @@
 // Settings Page Functionality
-// Deletes from BOTH localStorage AND Firebase
+// With Firebase deletion and Battery Saver Mode
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// Firebase Configuration (same as app.js)
 const firebaseConfig = {
   apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
   authDomain: "lead-finder-pro-27bf2.firebaseapp.com",
@@ -23,6 +22,52 @@ const DEFAULT_REQUIREMENTS = {
     weeklyHours: 10
 };
 
+// ============================================
+// BATTERY SAVER MODE
+// ============================================
+window.isBatterySaverOn = function() {
+    return localStorage.getItem('battery_saver') === 'true';
+};
+
+window.toggleBatterySaver = function() {
+    const current = localStorage.getItem('battery_saver') === 'true';
+    const newValue = !current;
+    localStorage.setItem('battery_saver', newValue.toString());
+    
+    // Update toggle UI
+    const toggle = document.getElementById('battery-saver-toggle');
+    if (toggle) {
+        toggle.checked = newValue;
+    }
+    
+    // Update status text
+    const status = document.getElementById('battery-saver-status');
+    if (status) {
+        status.textContent = newValue ? 'On' : 'Off';
+        status.style.color = newValue ? '#00e676' : 'rgba(255,255,255,0.5)';
+    }
+    
+    console.log('Battery Saver:', newValue ? 'ON' : 'OFF');
+};
+
+function loadBatterySaverState() {
+    const isOn = localStorage.getItem('battery_saver') === 'true';
+    
+    const toggle = document.getElementById('battery-saver-toggle');
+    if (toggle) {
+        toggle.checked = isOn;
+    }
+    
+    const status = document.getElementById('battery-saver-status');
+    if (status) {
+        status.textContent = isOn ? 'On' : 'Off';
+        status.style.color = isOn ? '#00e676' : 'rgba(255,255,255,0.5)';
+    }
+}
+
+// ============================================
+// HOUR REQUIREMENTS
+// ============================================
 window.getRequirements = function() {
     const saved = localStorage.getItem('hour_requirements');
     if (saved) {
@@ -76,6 +121,9 @@ window.resetRequirements = function() {
     }
 };
 
+// ============================================
+// SETTINGS PAGE LOAD
+// ============================================
 window.loadSettingsData = function() {
     setTimeout(() => {
         const nameEl = document.getElementById('settings-name');
@@ -98,9 +146,13 @@ window.loadSettingsData = function() {
         }
         
         updateSupportSection();
+        loadBatterySaverState();
     }, 100);
 };
 
+// ============================================
+// SUPPORT SECTION
+// ============================================
 function updateSupportSection() {
     const supportBtn = document.getElementById('support-btn');
     const supportStatus = document.getElementById('support-status');
@@ -127,7 +179,9 @@ window.openSupportModal = function() {
     }
 };
 
-// DELETE ALL DATA - FROM LOCALSTORAGE AND FIREBASE
+// ============================================
+// DELETE ALL DATA
+// ============================================
 window.deleteAllData = function() {
     const stats = window.getStats ? window.getStats() : { trips: [], totalHours: 0, nightHours: 0 };
     const tripCount = stats.trips.length;
@@ -147,14 +201,12 @@ window.deleteAllData = function() {
         return;
     }
     
-    // Perform deletion
     performDeletion();
 };
 
 async function performDeletion() {
     const uid = localStorage.getItem('log_uid');
     
-    // Show loading
     const deleteBtn = document.getElementById('delete-all-btn');
     if (deleteBtn) {
         deleteBtn.disabled = true;
@@ -162,9 +214,7 @@ async function performDeletion() {
     }
     
     try {
-        // ============================================
-        // STEP 1: Delete from localStorage
-        // ============================================
+        // Delete from localStorage
         const emptyStats = {
             totalHours: 0,
             nightHours: 0,
@@ -176,7 +226,6 @@ async function performDeletion() {
         localStorage.removeItem('safety_check_complete');
         localStorage.removeItem('active_drive');
         
-        // Remove route keys
         const allKeys = Object.keys(localStorage);
         allKeys.forEach(key => {
             if (key.startsWith('route_')) {
@@ -186,9 +235,7 @@ async function performDeletion() {
         
         console.log('✓ Local data deleted');
         
-        // ============================================
-        // STEP 2: Delete from Firebase
-        // ============================================
+        // Delete from Firebase
         if (uid) {
             try {
                 const docRef = doc(db, "users", uid);
@@ -201,13 +248,10 @@ async function performDeletion() {
                 console.log('✓ Cloud data deleted');
             } catch (firebaseError) {
                 console.error('Firebase delete error:', firebaseError);
-                // Continue anyway - local data is deleted
             }
         }
         
-        // ============================================
-        // STEP 3: Update UI directly
-        // ============================================
+        // Update UI
         const totalProgress = document.getElementById('total-progress');
         const nightProgress = document.getElementById('night-progress');
         const weeklyProgress = document.getElementById('weekly-progress');
@@ -216,7 +260,7 @@ async function performDeletion() {
         if (nightProgress) nightProgress.style.width = '0%';
         if (weeklyProgress) weeklyProgress.style.width = '0%';
         
-        const reqs = window.getRequirements ? window.getRequirements() : { totalHours: 60, nightHours: 10, weeklyHours: 10 };
+        const reqs = window.getRequirements();
         
         const totalHoursEl = document.getElementById('total-hours');
         const nightHoursEl = document.getElementById('night-hours');
@@ -245,9 +289,6 @@ async function performDeletion() {
             deleteBtn.textContent = '🗑️ No Data to Delete';
         }
         
-        // ============================================
-        // STEP 4: Success
-        // ============================================
         alert('✅ All data deleted from device and cloud!');
         
         if (window.showPage) {
@@ -265,6 +306,9 @@ async function performDeletion() {
     }
 }
 
+// ============================================
+// DATA SUMMARY
+// ============================================
 window.getDataSummary = function() {
     const stats = window.getStats ? window.getStats() : { trips: [], totalHours: 0, nightHours: 0 };
     
@@ -310,4 +354,4 @@ window.updateSettingsDisplay = function() {
     }
 };
 
-console.log('Settings module loaded (with Firebase deletion)');
+console.log('Settings module loaded (Firebase + Battery Saver)');
