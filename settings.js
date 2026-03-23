@@ -1,5 +1,5 @@
 // Settings Page Functionality
-// With Firebase deletion and Battery Saver Mode
+// With Firebase deletion, Battery Saver toggle, and Support button
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -34,7 +34,7 @@ window.toggleBatterySaver = function() {
     const newValue = !current;
     localStorage.setItem('battery_saver', newValue.toString());
     
-    // Update toggle UI
+    // Update checkbox
     const toggle = document.getElementById('battery-saver-toggle');
     if (toggle) {
         toggle.checked = newValue;
@@ -45,6 +45,18 @@ window.toggleBatterySaver = function() {
     if (status) {
         status.textContent = newValue ? 'On' : 'Off';
         status.style.color = newValue ? '#00e676' : 'rgba(255,255,255,0.5)';
+    }
+    
+    // Update toggle track (background)
+    const track = document.getElementById('battery-saver-track');
+    if (track) {
+        track.style.backgroundColor = newValue ? '#00e676' : '#444';
+    }
+    
+    // Update toggle thumb (slider)
+    const thumb = document.getElementById('battery-saver-thumb');
+    if (thumb) {
+        thumb.style.transform = newValue ? 'translateX(22px)' : 'translateX(0)';
     }
     
     console.log('Battery Saver:', newValue ? 'ON' : 'OFF');
@@ -62,6 +74,16 @@ function loadBatterySaverState() {
     if (status) {
         status.textContent = isOn ? 'On' : 'Off';
         status.style.color = isOn ? '#00e676' : 'rgba(255,255,255,0.5)';
+    }
+    
+    const track = document.getElementById('battery-saver-track');
+    if (track) {
+        track.style.backgroundColor = isOn ? '#00e676' : '#444';
+    }
+    
+    const thumb = document.getElementById('battery-saver-thumb');
+    if (thumb) {
+        thumb.style.transform = isOn ? 'translateX(22px)' : 'translateX(0)';
     }
 }
 
@@ -180,7 +202,7 @@ window.openSupportModal = function() {
 };
 
 // ============================================
-// DELETE ALL DATA
+// DELETE ALL DATA (LOCAL + FIREBASE)
 // ============================================
 window.deleteAllData = function() {
     const stats = window.getStats ? window.getStats() : { trips: [], totalHours: 0, nightHours: 0 };
@@ -194,6 +216,17 @@ window.deleteAllData = function() {
     
     if (!confirm('Delete ' + tripCount + ' trips (' + totalHours + ' hours)?\n\nThis will delete from this device AND the cloud.\n\nThis cannot be undone!')) {
         return;
+    }
+    
+    // Offer PDF export
+    if (confirm('Export PDF backup first?')) {
+        if (window.exportToPDF) {
+            try {
+                window.exportToPDF();
+            } catch (e) {
+                console.log('PDF export error:', e);
+            }
+        }
     }
     
     if (prompt('Type DELETE to confirm:') !== 'DELETE') {
@@ -354,4 +387,4 @@ window.updateSettingsDisplay = function() {
     }
 };
 
-console.log('Settings module loaded (Firebase + Battery Saver)');
+console.log('Settings module loaded (v2 - Firebase + Battery Saver)');

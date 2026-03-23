@@ -1,13 +1,76 @@
-// Dashboard functionality with Battery Saver Mode support
+// Dashboard functionality with Battery Saver and Weather Tracking
 
 let driveStartTime = null;
 let driveInterval = null;
 let startLocation = null;
 let wakeLock = null;
+let driveWeather = null;
 
 // Check if battery saver is enabled
 function isBatterySaver() {
     return localStorage.getItem('battery_saver') === 'true';
+}
+
+// Fetch weather conditions from Open-Meteo (free, no API key)
+async function fetchWeather(lat, lng) {
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,wind_speed_10m,precipitation&temperature_unit=fahrenheit`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Weather fetch failed');
+        
+        const data = await response.json();
+        const current = data.current;
+        
+        // Convert weather code to description
+        const weatherDesc = getWeatherDescription(current.weather_code);
+        
+        return {
+            temp: Math.round(current.temperature_2m),
+            condition: weatherDesc,
+            windSpeed: Math.round(current.wind_speed_10m),
+            precipitation: current.precipitation,
+            code: current.weather_code
+        };
+    } catch (error) {
+        console.error('Weather fetch error:', error);
+        return null;
+    }
+}
+
+// Convert WMO weather codes to descriptions
+function getWeatherDescription(code) {
+    const codes = {
+        0: 'Clear',
+        1: 'Mostly Clear',
+        2: 'Partly Cloudy',
+        3: 'Overcast',
+        45: 'Foggy',
+        48: 'Foggy',
+        51: 'Light Drizzle',
+        53: 'Drizzle',
+        55: 'Heavy Drizzle',
+        56: 'Freezing Drizzle',
+        57: 'Freezing Drizzle',
+        61: 'Light Rain',
+        63: 'Rain',
+        65: 'Heavy Rain',
+        66: 'Freezing Rain',
+        67: 'Freezing Rain',
+        71: 'Light Snow',
+        73: 'Snow',
+        75: 'Heavy Snow',
+        77: 'Snow Grains',
+        80: 'Light Showers',
+        81: 'Showers',
+        82: 'Heavy Showers',
+        85: 'Snow Showers',
+        86: 'Heavy Snow Showers',
+        95: 'Thunderstorm',
+        96: 'Thunderstorm w/ Hail',
+        99: 'Thunderstorm w/ Hail'
+    };
+    return codes[code] || 'Unknown';
 }
 
 // Request wake lock (skipped in battery saver mode)
@@ -50,6 +113,7 @@ function saveDriveState() {
         const driveState = {
             startTime: driveStartTime.toISOString(),
             startLocation: startLocation,
+            weather: driveWeather,
             savedAt: new Date().toISOString()
         };
         localStorage.setItem('active_drive', JSON.stringify(driveState));
@@ -65,6 +129,7 @@ function restoreDriveState() {
             const driveState = JSON.parse(savedState);
             driveStartTime = new Date(driveState.startTime);
             startLocation = driveState.startLocation;
+            driveWeather = driveState.weather || null;
             
             const startBtn = document.getElementById('start-drive-btn');
             const safetyStatus = document.getElementById('safety-status');
@@ -104,17 +169,7 @@ function restoreDriveState() {
                     }, 100);
                 }
             } else if (isBatterySaver()) {
-                // Show battery saver indicator
-                const mapPlaceholder = document.querySelector('.map-placeholder');
-                if (mapPlaceholder) {
-                    mapPlaceholder.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
-                            <p style="font-size: 40px; margin: 0;">🔋</p>
-                            <p style="margin: 10px 0 5px; font-weight: bold; color: #00e676;">Battery Saver Active</p>
-                            <small>GPS recording in background</small>
-                        </div>
-                    `;
-                }
+                showBatterySaverPlaceholder();
             }
             
             console.log('Drive state restored');
@@ -123,6 +178,26 @@ function restoreDriveState() {
             console.error('Error restoring drive state:', error);
             localStorage.removeItem('active_drive');
         }
+    }
+}
+
+// Show battery saver placeholder
+function showBatterySaverPlaceholder() {
+    const mapPlaceholder = document.querySelector('.map-placeholder');
+    if (mapPlaceholder) {
+        let weatherInfo = '';
+        if (driveWeather) {
+            weatherInfo = `<p style="margin: 5px 0; font-size: 12px;">${driveWeather.temp}°F - ${driveWeather.condition}</p>`;
+        }
+        
+        mapPlaceholder.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+                <p style="font-size: 40px; margin: 0;">🔋</p>
+                <p style="margin: 10px 0 5px; font-weight: bold; color: #00e676;">Battery Saver Active</p>
+                <small>GPS recording in background</small>
+                ${weatherInfo}
+            </div>
+        `;
     }
 }
 
@@ -187,33 +262,20 @@ window.startDrive = function() {
     } else {
         // Start the drive
         driveStartTime = new Date();
+        driveWeather = null;
         
         requestWakeLock();
         
         const mapPlaceholder = document.querySelector('.map-placeholder');
         
-        // Only show live map if NOT in battery saver mode
-        if (!isBatterySaver()) {
-            if (mapPlaceholder) {
-                mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
-                
-                setTimeout(() => {
-                    if (window.initMap) {
-                        window.initMap();
-                    }
-                }, 100);
-            }
-        } else {
-            // Show battery saver indicator
-            if (mapPlaceholder) {
-                mapPlaceholder.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
-                        <p style="font-size: 40px; margin: 0;">🔋</p>
-                        <p style="margin: 10px 0 5px; font-weight: bold; color: #00e676;">Battery Saver Active</p>
-                        <small>GPS recording in background</small>
-                    </div>
-                `;
-            }
+        // Show loading state
+        if (mapPlaceholder) {
+            mapPlaceholder.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+                    <p style="font-size: 24px; margin: 0;">⏳</p>
+                    <small>Getting location & weather...</small>
+                </div>
+            `;
         }
         
         // Get GPS location
@@ -223,33 +285,69 @@ window.startDrive = function() {
                 : { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
             
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     startLocation = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     };
                     console.log('Start location:', startLocation);
                     
+                    // Fetch weather
+                    driveWeather = await fetchWeather(startLocation.lat, startLocation.lng);
+                    if (driveWeather) {
+                        console.log('Weather:', driveWeather);
+                    }
+                    
                     saveDriveState();
                     
-                    // Only start visual tracking if not in battery saver
-                    if (!isBatterySaver() && window.startRouteTracking) {
-                        window.startRouteTracking(startLocation);
-                    } else if (window.startRouteTrackingMinimal) {
-                        // Use minimal tracking for battery saver
-                        window.startRouteTrackingMinimal(startLocation);
+                    // Set up map or battery saver display
+                    if (!isBatterySaver()) {
+                        if (mapPlaceholder) {
+                            mapPlaceholder.innerHTML = '<div id="map-container" style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden;"></div>';
+                            
+                            setTimeout(() => {
+                                if (window.initMap) {
+                                    window.initMap();
+                                }
+                                if (window.startRouteTracking) {
+                                    window.startRouteTracking(startLocation);
+                                }
+                            }, 100);
+                        }
+                    } else {
+                        showBatterySaverPlaceholder();
+                        if (window.startRouteTrackingMinimal) {
+                            window.startRouteTrackingMinimal(startLocation);
+                        }
                     }
                 },
                 (error) => {
                     console.log('GPS error:', error);
                     startLocation = null;
                     saveDriveState();
+                    
+                    if (isBatterySaver()) {
+                        showBatterySaverPlaceholder();
+                    } else {
+                        if (mapPlaceholder) {
+                            mapPlaceholder.innerHTML = `
+                                <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+                                    <p style="font-size: 24px; margin: 0;">📍</p>
+                                    <small>GPS unavailable - time still tracking</small>
+                                </div>
+                            `;
+                        }
+                    }
+                    
                     alert('⚠️ GPS not available. Drive will be recorded without location data.');
                 },
                 gpsOptions
             );
         } else {
             saveDriveState();
+            if (isBatterySaver()) {
+                showBatterySaverPlaceholder();
+            }
         }
         
         if (startBtn) {
@@ -339,6 +437,19 @@ function stopDrive() {
 }
 
 function saveTrip(durationHours, endLocation, routeData) {
+    // Calculate distance - use route if available, otherwise estimate from start/end
+    let distance = null;
+    
+    if (routeData && routeData.distance) {
+        distance = routeData.distance;
+    } else if (startLocation && endLocation) {
+        // Estimate distance from start to end (straight line)
+        distance = getDistanceBetweenPoints(
+            startLocation.lat, startLocation.lng,
+            endLocation.lat, endLocation.lng
+        );
+    }
+    
     const trip = {
         id: Date.now(),
         startTime: driveStartTime.toISOString(),
@@ -353,7 +464,8 @@ function saveTrip(durationHours, endLocation, routeData) {
             lat: Number(endLocation.lat.toFixed(6)),
             lng: Number(endLocation.lng.toFixed(6))
         } : null,
-        distance: routeData && routeData.distance ? Number(routeData.distance.toFixed(2)) : null,
+        distance: distance ? Number(distance.toFixed(2)) : null,
+        weather: driveWeather,
         batterySaver: isBatterySaver()
     };
     
@@ -418,12 +530,16 @@ function saveTrip(durationHours, endLocation, routeData) {
     
     driveStartTime = null;
     startLocation = null;
+    driveWeather = null;
     
     if (window.clearMap) {
         window.clearMap();
     }
     
+    // Reset map placeholder
     const mapContainer = document.getElementById('map-container');
+    const batteryPlaceholder = document.querySelector('.map-placeholder, [style*="Battery Saver"]');
+    
     if (mapContainer && mapContainer.parentElement) {
         mapContainer.parentElement.innerHTML = `
             <div class="map-placeholder">
@@ -431,29 +547,27 @@ function saveTrip(durationHours, endLocation, routeData) {
                 <small>GPS tracking active during drive</small>
             </div>
         `;
-    }
-    
-    // Also reset battery saver placeholder
-    const mapPlaceholder = document.querySelector('.map-placeholder');
-    if (!mapPlaceholder) {
-        const driveCard = document.querySelector('.drive-card');
-        if (driveCard) {
-            const placeholder = driveCard.querySelector('div[style*="Battery Saver"]');
-            if (placeholder && placeholder.parentElement) {
-                placeholder.parentElement.innerHTML = `
-                    <div class="map-placeholder">
-                        <p>🗺️</p>
-                        <small>GPS tracking active during drive</small>
-                    </div>
-                `;
-            }
-        }
+    } else if (batteryPlaceholder) {
+        batteryPlaceholder.outerHTML = `
+            <div class="map-placeholder">
+                <p>🗺️</p>
+                <small>GPS tracking active during drive</small>
+            </div>
+        `;
     }
     
     window.loadDashboard();
     
-    const distanceText = trip.distance ? ` (${trip.distance.toFixed(2)} miles)` : '';
-    alert(`Drive complete! Duration: ${durationHours.toFixed(2)} hours${distanceText}`);
+    // Build completion message
+    let message = `Drive complete! Duration: ${durationHours.toFixed(2)} hours`;
+    if (trip.distance) {
+        message += ` (${trip.distance.toFixed(1)} miles)`;
+    }
+    if (trip.weather) {
+        message += `\nWeather: ${trip.weather.temp}°F, ${trip.weather.condition}`;
+    }
+    
+    alert(message);
     
     console.log('Attempting to sync trip to cloud...');
     if (window.pushToCloud) {
@@ -463,6 +577,24 @@ function saveTrip(durationHours, endLocation, routeData) {
     }
     
     console.log('Drive stopped, trip saved:', trip);
+}
+
+// Calculate distance between two points (Haversine formula)
+function getDistanceBetweenPoints(lat1, lon1, lat2, lon2) {
+    const R = 3959; // Earth's radius in miles
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
 }
 
 function updateTimer() {
@@ -507,4 +639,4 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-console.log('Dashboard module loaded (with Battery Saver support)');
+console.log('Dashboard module loaded (with Battery Saver + Weather)');

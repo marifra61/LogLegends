@@ -1,5 +1,4 @@
-// PDF Export functionality for driving logs (DMV-ready format)
-// Updated: Free for all users + tip prompt after export
+// PDF Export functionality - FREE with weather conditions
 
 // Main PDF export function
 window.exportToPDF = async function() {
@@ -15,15 +14,15 @@ window.exportToPDF = async function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Header with professional styling (no emoji)
+        // Header with professional styling
         doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(102, 126, 234); // Purple/blue color
+        doc.setTextColor(102, 126, 234);
         doc.text('DRIVING LOG RECORD', 105, 20, { align: 'center' });
         
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(0, 0, 0); // Back to black
+        doc.setTextColor(0, 0, 0);
         doc.text('State-Compliant Driving Hours Documentation', 105, 28, { align: 'center' });
         
         // Decorative line
@@ -63,10 +62,20 @@ window.exportToPDF = async function() {
         
         // Create summary box using dynamic requirements
         const reqs = window.getRequirements ? window.getRequirements() : { totalHours: 60, nightHours: 10, weeklyHours: 10 };
+        
+        // Calculate total distance
+        let totalDistance = 0;
+        data.stats.trips.forEach(trip => {
+            if (trip.distance) {
+                totalDistance += trip.distance;
+            }
+        });
+        
         const summaryData = [
             ['Total Hours:', `${data.stats.totalHours.toFixed(2)} hours`, `Requirement: ${reqs.totalHours} hours`],
             ['Night Hours (6pm-6am):', `${data.stats.nightHours.toFixed(2)} hours`, `Requirement: ${reqs.nightHours} hours`],
             ['Total Trips:', `${data.stats.trips.length}`, ''],
+            ['Total Distance:', `${totalDistance.toFixed(1)} miles`, ''],
         ];
         
         summaryData.forEach((row) => {
@@ -90,16 +99,17 @@ window.exportToPDF = async function() {
         
         yPos += 8;
         
-        // Trip table headers
-        doc.setFontSize(9);
+        // Trip table headers - adjusted positions for weather column
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
         doc.text('Date', 20, yPos);
-        doc.text('Start', 50, yPos);
-        doc.text('End', 75, yPos);
-        doc.text('Duration', 95, yPos);
-        doc.text('Night', 120, yPos);
-        doc.text('Distance', 140, yPos);
-        doc.text('Speed', 165, yPos);
+        doc.text('Start', 42, yPos);
+        doc.text('End', 60, yPos);
+        doc.text('Hrs', 78, yPos);
+        doc.text('Night', 92, yPos);
+        doc.text('Miles', 108, yPos);
+        doc.text('Weather', 125, yPos);
+        doc.text('Conditions', 160, yPos);
         
         yPos += 3;
         doc.setLineWidth(0.3);
@@ -120,15 +130,16 @@ window.exportToPDF = async function() {
                 yPos = 20;
                 
                 // Repeat headers on new page
-                doc.setFontSize(9);
+                doc.setFontSize(8);
                 doc.setFont('helvetica', 'bold');
                 doc.text('Date', 20, yPos);
-                doc.text('Start', 50, yPos);
-                doc.text('End', 75, yPos);
-                doc.text('Duration', 95, yPos);
-                doc.text('Night', 120, yPos);
-                doc.text('Distance', 140, yPos);
-                doc.text('Speed', 165, yPos);
+                doc.text('Start', 42, yPos);
+                doc.text('End', 60, yPos);
+                doc.text('Hrs', 78, yPos);
+                doc.text('Night', 92, yPos);
+                doc.text('Miles', 108, yPos);
+                doc.text('Weather', 125, yPos);
+                doc.text('Conditions', 160, yPos);
                 
                 yPos += 3;
                 doc.line(20, yPos, 190, yPos);
@@ -140,21 +151,60 @@ window.exportToPDF = async function() {
             const dateStr = date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
             const startTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             const endTime = new Date(trip.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            const duration = trip.duration.toFixed(2) + 'h';
+            const duration = trip.duration.toFixed(1) + 'h';
             const night = trip.isNight ? 'Yes' : 'No';
-            const distance = trip.distance ? trip.distance.toFixed(1) + ' mi' : 'N/A';
-            const avgSpeed = trip.distance && trip.duration > 0 ? 
-                (trip.distance / trip.duration).toFixed(0) + ' mph' : 'N/A';
             
+            // Get distance - calculate from start/end if not available
+            let distance = 'N/A';
+            if (trip.distance && trip.distance > 0) {
+                distance = trip.distance.toFixed(1);
+            } else if (trip.startLocation && trip.endLocation) {
+                // Estimate straight-line distance
+                const estDist = getDistanceBetweenPoints(
+                    trip.startLocation.lat, trip.startLocation.lng,
+                    trip.endLocation.lat, trip.endLocation.lng
+                );
+                if (estDist > 0) {
+                    distance = estDist.toFixed(1) + '*';
+                }
+            }
+            
+            // Weather info
+            let weatherTemp = '';
+            let weatherCond = '';
+            if (trip.weather) {
+                weatherTemp = trip.weather.temp + 'F';
+                weatherCond = trip.weather.condition || '';
+                // Truncate long conditions
+                if (weatherCond.length > 12) {
+                    weatherCond = weatherCond.substring(0, 11) + '.';
+                }
+            }
+            
+            doc.setFontSize(8);
             doc.text(dateStr, 20, yPos);
-            doc.text(startTime, 50, yPos);
-            doc.text(endTime, 75, yPos);
-            doc.text(duration, 95, yPos);
-            doc.text(night, 120, yPos);
-            doc.text(distance, 140, yPos);
-            doc.text(avgSpeed, 165, yPos);
+            doc.text(startTime, 42, yPos);
+            doc.text(endTime, 60, yPos);
+            doc.text(duration, 78, yPos);
+            doc.text(night, 92, yPos);
+            doc.text(distance, 108, yPos);
+            doc.text(weatherTemp, 125, yPos);
+            doc.text(weatherCond, 155, yPos);
             
-            yPos += 6;
+            yPos += 5;
+        }
+        
+        // Add footnote if estimated distances were used
+        const hasEstimatedDistances = trips.some(t => 
+            (!t.distance || t.distance === 0) && t.startLocation && t.endLocation
+        );
+        
+        if (hasEstimatedDistances) {
+            yPos += 5;
+            doc.setFontSize(7);
+            doc.setTextColor(100);
+            doc.text('* Distance estimated from start/end points (straight-line)', 20, yPos);
+            doc.setTextColor(0);
         }
         
         // Signature section (new page if needed)
@@ -198,69 +248,78 @@ window.exportToPDF = async function() {
         }
         
         // Save the PDF
-        const filename = `DrivingLog_${data.user.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        const userName = data.user.name || 'Driver';
+        const filename = `DrivingLog_${userName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
         doc.save(filename);
         
         console.log('PDF exported successfully:', filename);
         
-        // Show success message
+        // Show success toast
         showExportSuccess();
         
-        // Show tip prompt after successful export (1.5 second delay)
+        // Trigger tip modal after successful export
         if (typeof TipSystem !== 'undefined') {
-            setTimeout(() => {
-                TipSystem.showTipModal('pdf_export');
-            }, 1500);
+            setTimeout(() => TipSystem.showTipModal('pdf_export'), 1500);
         }
         
     } catch (error) {
         console.error('PDF export error:', error);
-        alert('❌ Error exporting PDF. Please try again.');
+        alert('Error exporting PDF. Please try again.');
     }
 };
 
-// Show export success toast (non-blocking)
-function showExportSuccess() {
-    const toast = document.createElement('div');
-    toast.innerHTML = '✅ PDF exported successfully!';
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #10b981;
-        color: white;
-        padding: 14px 24px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 15px;
-        z-index: 9999;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-        animation: toastIn 0.3s ease;
-    `;
+// Calculate distance between two GPS points (Haversine formula)
+function getDistanceBetweenPoints(lat1, lon1, lat2, lon2) {
+    const R = 3959; // Earth's radius in miles
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
     
-    // Add animation keyframes if not exists
-    if (!document.getElementById('toast-styles')) {
-        const style = document.createElement('style');
-        style.id = 'toast-styles';
-        style.textContent = `
-            @keyframes toastIn {
-                from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-                to { opacity: 1; transform: translateX(-50%) translateY(0); }
-            }
-        `;
-        document.head.appendChild(style);
-    }
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
     
-    document.body.appendChild(toast);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(20px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
 }
 
-console.log('PDF export module loaded (free + tips)');
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+// Show success toast
+function showExportSuccess() {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #00e676, #00c853);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 30px;
+        font-weight: bold;
+        z-index: 10000;
+        box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
+        animation: slideUp 0.3s ease-out;
+    `;
+    toast.textContent = '✓ PDF Downloaded!';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
+console.log('PDF export module loaded (with weather support)');
