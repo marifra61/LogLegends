@@ -1,20 +1,5 @@
 // Settings Page Functionality
-// With Firebase deletion, Battery Saver toggle, and Support button
-
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
-  authDomain: "lead-finder-pro-27bf2.firebaseapp.com",
-  projectId: "lead-finder-pro-27bf2",
-  storageBucket: "lead-finder-pro-27bf2.firebasestorage.app",
-  messagingSenderId: "197510050244",
-  appId: "1:197510050244:web:f2baf1b7ff0b81c1fb7491"
-};
-
-const app = initializeApp(firebaseConfig, 'settings-app');
-const db = getFirestore(app);
+// Fixed version - no ES6 imports, proper toggle, Firebase deletion
 
 const DEFAULT_REQUIREMENTS = {
     totalHours: 60,
@@ -34,56 +19,38 @@ window.toggleBatterySaver = function() {
     const newValue = !current;
     localStorage.setItem('battery_saver', newValue.toString());
     
-    // Update checkbox
-    const toggle = document.getElementById('battery-saver-toggle');
-    if (toggle) {
-        toggle.checked = newValue;
-    }
-    
-    // Update status text
-    const status = document.getElementById('battery-saver-status');
-    if (status) {
-        status.textContent = newValue ? 'On' : 'Off';
-        status.style.color = newValue ? '#00e676' : 'rgba(255,255,255,0.5)';
-    }
-    
-    // Update toggle track (background)
-    const track = document.getElementById('battery-saver-track');
-    if (track) {
-        track.style.backgroundColor = newValue ? '#00e676' : '#444';
-    }
-    
-    // Update toggle thumb (slider)
-    const thumb = document.getElementById('battery-saver-thumb');
-    if (thumb) {
-        thumb.style.transform = newValue ? 'translateX(22px)' : 'translateX(0)';
-    }
-    
+    updateBatterySaverUI(newValue);
     console.log('Battery Saver:', newValue ? 'ON' : 'OFF');
 };
 
-function loadBatterySaverState() {
-    const isOn = localStorage.getItem('battery_saver') === 'true';
-    
+function updateBatterySaverUI(isOn) {
+    // Update checkbox
     const toggle = document.getElementById('battery-saver-toggle');
     if (toggle) {
         toggle.checked = isOn;
     }
     
+    // Update status text
     const status = document.getElementById('battery-saver-status');
     if (status) {
         status.textContent = isOn ? 'On' : 'Off';
         status.style.color = isOn ? '#00e676' : 'rgba(255,255,255,0.5)';
     }
     
+    // Update toggle track (background)
     const track = document.getElementById('battery-saver-track');
     if (track) {
         track.style.backgroundColor = isOn ? '#00e676' : '#444';
     }
     
+    // Update toggle thumb (slider position)
     const thumb = document.getElementById('battery-saver-thumb');
     if (thumb) {
-        thumb.style.transform = isOn ? 'translateX(22px)' : 'translateX(0)';
+        if (isOn) {
+            thumb.style.left = '25px';
+        } else {
+            thumb.style.left = '3px';
+        }
     }
 }
 
@@ -147,29 +114,43 @@ window.resetRequirements = function() {
 // SETTINGS PAGE LOAD
 // ============================================
 window.loadSettingsData = function() {
-    setTimeout(() => {
-        const nameEl = document.getElementById('settings-name');
-        const emailEl = document.getElementById('settings-email');
-        
-        if (nameEl) nameEl.textContent = localStorage.getItem('log_name') || 'N/A';
-        if (emailEl) emailEl.textContent = localStorage.getItem('log_email') || 'N/A';
-        
-        const reqs = window.getRequirements();
-        const totalEl = document.getElementById('req-total');
-        const nightEl = document.getElementById('req-night');
-        const weeklyEl = document.getElementById('req-weekly');
-        
-        if (totalEl) totalEl.value = reqs.totalHours;
-        if (nightEl) nightEl.value = reqs.nightHours;
-        if (weeklyEl) weeklyEl.value = reqs.weeklyHours;
-        
-        if (window.updateSettingsDisplay) {
-            window.updateSettingsDisplay();
-        }
-        
-        updateSupportSection();
-        loadBatterySaverState();
-    }, 100);
+    console.log('Loading settings data...');
+    
+    // Update user info immediately
+    const nameEl = document.getElementById('settings-name');
+    const emailEl = document.getElementById('settings-email');
+    
+    const userName = localStorage.getItem('log_name');
+    const userEmail = localStorage.getItem('log_email');
+    
+    console.log('User name:', userName, 'Email:', userEmail);
+    
+    if (nameEl) nameEl.textContent = userName || 'Not logged in';
+    if (emailEl) emailEl.textContent = userEmail || 'Not logged in';
+    
+    // Load hour requirements
+    const reqs = window.getRequirements();
+    const totalEl = document.getElementById('req-total');
+    const nightEl = document.getElementById('req-night');
+    const weeklyEl = document.getElementById('req-weekly');
+    
+    if (totalEl) totalEl.value = reqs.totalHours;
+    if (nightEl) nightEl.value = reqs.nightHours;
+    if (weeklyEl) weeklyEl.value = reqs.weeklyHours;
+    
+    // Update data summary
+    if (window.updateSettingsDisplay) {
+        window.updateSettingsDisplay();
+    }
+    
+    // Update support section
+    updateSupportSection();
+    
+    // Update battery saver toggle
+    const isOn = localStorage.getItem('battery_saver') === 'true';
+    updateBatterySaverUI(isOn);
+    
+    console.log('Settings data loaded');
 };
 
 // ============================================
@@ -268,9 +249,24 @@ async function performDeletion() {
         
         console.log('✓ Local data deleted');
         
-        // Delete from Firebase
+        // Delete from Firebase using dynamic import
         if (uid) {
             try {
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getFirestore, doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
+                    authDomain: "lead-finder-pro-27bf2.firebaseapp.com",
+                    projectId: "lead-finder-pro-27bf2",
+                    storageBucket: "lead-finder-pro-27bf2.firebasestorage.app",
+                    messagingSenderId: "197510050244",
+                    appId: "1:197510050244:web:f2baf1b7ff0b81c1fb7491"
+                };
+                
+                const app = initializeApp(firebaseConfig, 'settings-delete');
+                const db = getFirestore(app);
+                
                 const docRef = doc(db, "users", uid);
                 await setDoc(docRef, {
                     stats: emptyStats,
@@ -387,4 +383,4 @@ window.updateSettingsDisplay = function() {
     }
 };
 
-console.log('Settings module loaded (v2 - Firebase + Battery Saver)');
+console.log('Settings module loaded');
