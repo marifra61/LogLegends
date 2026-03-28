@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "org.loglegends.twa",
+        "sha256_cert_fingerprints": ["BE:58:46:1A:1D:77:E8:FA:0A:86:10:73:F0:36:D8:44:93:2F:85:FD:7B:7A:77:0D:4A:F3:5B:08:A1:07:EE:B6"]
+      }
+    }]
