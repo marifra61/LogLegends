@@ -139,6 +139,11 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
         
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
         /* Stats Cards */
         .stats-grid {
             display: grid;
@@ -302,6 +307,117 @@
             color: rgba(255,255,255,0.5);
         }
         
+        /* Delete Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal {
+            background: #1e1e2e;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #ff4757;
+        }
+        
+        .modal p {
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .modal .user-details {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .modal .user-details p {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .modal .warning {
+            color: #ffc107;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .modal-actions button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .modal-actions .btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .modal-actions .btn-delete {
+            background: #ff4757;
+            color: white;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #00e676;
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 500;
+            z-index: 1001;
+            display: none;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .table-container {
@@ -309,7 +425,7 @@
             }
             
             table {
-                min-width: 800px;
+                min-width: 900px;
             }
             
             .search-box {
@@ -376,10 +492,29 @@
         </div>
     </div>
     
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <h3>⚠️ Delete User</h3>
+            <p>Are you sure you want to delete this user?</p>
+            <div class="user-details" id="delete-user-details">
+                <!-- Populated by JavaScript -->
+            </div>
+            <p class="warning">⚠️ This action cannot be undone. All user data including trips and progress will be permanently deleted.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-delete" onclick="confirmDelete()">Delete User</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+    
     <!-- Firebase -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         const firebaseConfig = {
             apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
@@ -395,6 +530,8 @@
         
         // Store users globally for filtering
         window.allUsers = [];
+        window.userToDelete = null;
+        window.db = db; // Make db accessible globally
         
         // Admin password - change this!
         const ADMIN_PASSWORD = 'LogLegends2024!';
@@ -495,6 +632,9 @@
             }
         }
         
+        // Make loadUsers available globally for refresh
+        window.loadUsers = loadUsers;
+        
         // Get last weather from trips
         function getLastWeather(trips) {
             if (!trips || trips.length === 0) return null;
@@ -529,6 +669,7 @@
                             <th>Trips</th>
                             <th>Progress</th>
                             <th>Last Active</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -563,6 +704,11 @@
                         <td>${user.trips}</td>
                         <td>${progressBadge}</td>
                         <td>${escapeHtml(user.lastUpdated)}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${user.id}', '${escapeHtml(user.name)}', '${escapeHtml(user.email)}', ${user.totalHours.toFixed(1)}, ${user.trips})">
+                                🗑️ Delete
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
@@ -570,6 +716,67 @@
             html += '</tbody></table>';
             document.getElementById('users-table-container').innerHTML = html;
         }
+        
+        // Make renderUsersTable available globally
+        window.renderUsersTable = renderUsersTable;
+        
+        // Show delete confirmation modal
+        window.showDeleteModal = function(userId, userName, userEmail, totalHours, trips) {
+            window.userToDelete = { id: userId, name: userName, email: userEmail };
+            
+            document.getElementById('delete-user-details').innerHTML = `
+                <p><strong>Name:</strong> ${userName}</p>
+                <p><strong>Email:</strong> ${userEmail}</p>
+                <p><strong>Total Hours:</strong> ${totalHours}h</p>
+                <p><strong>Trips:</strong> ${trips}</p>
+            `;
+            
+            document.getElementById('delete-modal').classList.add('show');
+        };
+        
+        // Close delete modal
+        window.closeDeleteModal = function() {
+            document.getElementById('delete-modal').classList.remove('show');
+            window.userToDelete = null;
+        };
+        
+        // Confirm and execute delete
+        window.confirmDelete = async function() {
+            if (!window.userToDelete) return;
+            
+            const userId = window.userToDelete.id;
+            const userName = window.userToDelete.name;
+            
+            try {
+                // Delete from Firebase
+                const userRef = doc(db, 'users', userId);
+                await deleteDoc(userRef);
+                
+                // Close modal
+                closeDeleteModal();
+                
+                // Show success toast
+                showToast(`✅ User "${userName}" has been deleted`);
+                
+                // Refresh the user list
+                loadUsers();
+                
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showToast(`❌ Error deleting user: ${error.message}`, true);
+            }
+        };
+        
+        // Show toast notification
+        window.showToast = function(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = isError ? 'toast error show' : 'toast show';
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        };
         
         // Filter users
         window.filterUsers = function() {
@@ -629,7 +836,8 @@
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
     </script>
 </body>
