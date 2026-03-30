@@ -4,7 +4,7 @@ import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/fireb
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
+  apiKey: "AIzaSyCdSwvXZdkrY0xwYo-Sbkzahzh8WknXhB4",
   authDomain: "lead-finder-pro-27bf2.firebaseapp.com",
   projectId: "lead-finder-pro-27bf2",
   storageBucket: "lead-finder-pro-27bf2.firebasestorage.app",
