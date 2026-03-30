@@ -1,28 +1,25 @@
-// auth.js - Firebase Authentication for LogLegends
-// Supports: Email/Password + Google Sign-In
+// auth.js - Hybrid Authentication for LogLegends
+// Google Sign-In: Uses Google Identity Services (GIS) - the OLD working method
+// Email/Password: Uses Firebase Authentication
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
     getAuth, 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword,
-    signInWithPopup,
-    GoogleAuthProvider,
     sendPasswordResetEmail,
-    onAuthStateChanged,
     signOut,
     updateProfile
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
     getFirestore, 
     doc, 
-    setDoc, 
-    getDoc 
+    setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase configuration
+// Firebase configuration (for Email/Password auth and Firestore)
 const firebaseConfig = {
-    apiKey: "AIzaSyCdSwvXZdkrY0xwYo-Sbkzahzh8WknXhB4",
+    apiKey: "AIzaSyCr5wvKZokrY0xwYo-Sbkzahzh8WknXHb4",
     authDomain: "lead-finder-pro-27bf2.firebaseapp.com",
     projectId: "lead-finder-pro-27bf2",
     storageBucket: "lead-finder-pro-27bf2.firebasestorage.app",
@@ -30,11 +27,13 @@ const firebaseConfig = {
     appId: "1:197510050244:web:f2baf1b7ff0b81c1fb7491"
 };
 
-// Initialize Firebase
+// Google Client ID for GIS (the old working method)
+const GOOGLE_CLIENT_ID = "807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com";
+
+// Initialize Firebase (for email/password only)
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
 
 // Track current auth mode
 let isSignUpMode = false;
@@ -46,53 +45,36 @@ let isSignUpMode = false;
 window.showSignInMode = function() {
     isSignUpMode = false;
     
-    // Update toggle buttons
     document.getElementById('auth-mode-signin').classList.add('active');
     document.getElementById('auth-mode-signup').classList.remove('active');
-    
-    // Hide name field
     document.getElementById('auth-name-group').style.display = 'none';
-    
-    // Show forgot password link
     document.getElementById('forgot-password-link').style.display = 'block';
-    
-    // Update submit button
     document.getElementById('auth-submit-btn').textContent = 'Sign In';
-    document.getElementById('auth-submit-btn').onclick = signInWithEmail;
+    document.getElementById('auth-submit-btn').onclick = window.signInWithEmail;
     
-    // Clear messages
     hideAuthMessages();
 };
 
 window.showSignUpMode = function() {
     isSignUpMode = true;
     
-    // Update toggle buttons
     document.getElementById('auth-mode-signin').classList.remove('active');
     document.getElementById('auth-mode-signup').classList.add('active');
-    
-    // Show name field
     document.getElementById('auth-name-group').style.display = 'block';
-    
-    // Hide forgot password link
     document.getElementById('forgot-password-link').style.display = 'none';
-    
-    // Update submit button
     document.getElementById('auth-submit-btn').textContent = 'Create Account';
-    document.getElementById('auth-submit-btn').onclick = signUpWithEmail;
+    document.getElementById('auth-submit-btn').onclick = window.signUpWithEmail;
     
-    // Clear messages
     hideAuthMessages();
 };
 
 // ============================================
-// MESSAGE DISPLAY HELPERS
+// MESSAGE HELPERS
 // ============================================
 
 function showError(message) {
     const errorEl = document.getElementById('auth-error');
     const successEl = document.getElementById('auth-success');
-    
     errorEl.textContent = message;
     errorEl.style.display = 'block';
     successEl.style.display = 'none';
@@ -101,7 +83,6 @@ function showError(message) {
 function showSuccess(message) {
     const errorEl = document.getElementById('auth-error');
     const successEl = document.getElementById('auth-success');
-    
     successEl.textContent = message;
     successEl.style.display = 'block';
     errorEl.style.display = 'none';
@@ -125,14 +106,95 @@ function setButtonLoading(loading) {
 }
 
 // ============================================
-// EMAIL/PASSWORD AUTHENTICATION
+// GOOGLE SIGN-IN (Old GIS Method - WORKS!)
+// ============================================
+
+window.signInWithGoogle = function() {
+    hideAuthMessages();
+    
+    if (typeof google === 'undefined' || !google.accounts) {
+        showError('Google Sign-In is loading. Please try again in a moment.');
+        return;
+    }
+    
+    google.accounts.id.prompt();
+};
+
+// Handle Google credential response (called by GIS)
+window.handleGoogleCredentialResponse = async function(response) {
+    try {
+        if (!response || !response.credential) {
+            showError('Google Sign-In failed. Please try again.');
+            return;
+        }
+        
+        // Decode the JWT token
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const payload = JSON.parse(jsonPayload);
+        
+        // Store user info in localStorage
+        localStorage.setItem('log_uid', payload.sub);
+        localStorage.setItem('log_name', payload.name || 'User');
+        localStorage.setItem('log_pic', payload.picture || '');
+        localStorage.setItem('log_email', payload.email || '');
+        
+        console.log('Google login successful:', payload.name);
+        
+        // Create/update Firestore document
+        await createUserDocument({
+            uid: payload.sub,
+            email: payload.email,
+            displayName: payload.name,
+            photoURL: payload.picture
+        });
+        
+        // Show the app
+        handleSuccessfulLogin({
+            uid: payload.sub,
+            displayName: payload.name,
+            email: payload.email,
+            photoURL: payload.picture
+        });
+        
+    } catch (error) {
+        console.error('Google login error:', error);
+        showError('Login failed. Please try again.');
+    }
+};
+
+// Initialize Google Identity Services
+function initializeGoogleSignIn() {
+    const checkGoogle = setInterval(function() {
+        if (typeof google !== 'undefined' && google.accounts) {
+            clearInterval(checkGoogle);
+            
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true
+            });
+            
+            console.log('Google Identity Services initialized');
+        }
+    }, 100);
+    
+    setTimeout(() => clearInterval(checkGoogle), 10000);
+}
+
+// ============================================
+// EMAIL/PASSWORD AUTHENTICATION (Firebase)
 // ============================================
 
 window.signInWithEmail = async function() {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
     
-    // Validation
     if (!email || !password) {
         showError('Please enter both email and password.');
         return;
@@ -144,7 +206,13 @@ window.signInWithEmail = async function() {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         console.log('Email sign-in successful:', userCredential.user.email);
-        // onAuthStateChanged will handle the rest
+        
+        localStorage.setItem('log_uid', userCredential.user.uid);
+        localStorage.setItem('log_name', userCredential.user.displayName || 'User');
+        localStorage.setItem('log_pic', userCredential.user.photoURL || '');
+        localStorage.setItem('log_email', userCredential.user.email || '');
+        
+        handleSuccessfulLogin(userCredential.user);
     } catch (error) {
         console.error('Sign-in error:', error);
         handleAuthError(error);
@@ -158,41 +226,26 @@ window.signUpWithEmail = async function() {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
     
-    // Validation
-    if (!name) {
-        showError('Please enter your name.');
-        return;
-    }
-    if (!email) {
-        showError('Please enter your email address.');
-        return;
-    }
-    if (!password) {
-        showError('Please enter a password.');
-        return;
-    }
-    if (password.length < 6) {
-        showError('Password must be at least 6 characters.');
-        return;
-    }
+    if (!name) { showError('Please enter your name.'); return; }
+    if (!email) { showError('Please enter your email address.'); return; }
+    if (!password) { showError('Please enter a password.'); return; }
+    if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
     
     setButtonLoading(true);
     hideAuthMessages();
     
     try {
-        // Create account
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Update profile with name
-        await updateProfile(userCredential.user, {
-            displayName: name
-        });
-        
-        // Create Firestore document for user
+        await updateProfile(userCredential.user, { displayName: name });
         await createUserDocument(userCredential.user, name);
         
-        console.log('Account created successfully:', email);
-        // onAuthStateChanged will handle the rest
+        localStorage.setItem('log_uid', userCredential.user.uid);
+        localStorage.setItem('log_name', name);
+        localStorage.setItem('log_pic', '');
+        localStorage.setItem('log_email', email);
+        
+        console.log('Account created:', email);
+        handleSuccessfulLogin({ ...userCredential.user, displayName: name });
     } catch (error) {
         console.error('Sign-up error:', error);
         handleAuthError(error);
@@ -202,50 +255,12 @@ window.signUpWithEmail = async function() {
 };
 
 // ============================================
-// GOOGLE SIGN-IN
-// ============================================
-
-window.signInWithGoogle = async function() {
-    hideAuthMessages();
-    
-    try {
-        const result = await signInWithPopup(auth, googleProvider);
-        console.log('Google sign-in successful:', result.user.email);
-        
-        // Check if this is a new user
-        const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-        if (!userDoc.exists()) {
-            await createUserDocument(result.user, result.user.displayName);
-        }
-        
-        // onAuthStateChanged will handle the rest
-    } catch (error) {
-        console.error('Google sign-in error:', error);
-        
-        if (error.code === 'auth/popup-closed-by-user') {
-            // User closed the popup, don't show error
-            return;
-        }
-        if (error.code === 'auth/popup-blocked') {
-            showError('Popup was blocked. Please allow popups for this site.');
-            return;
-        }
-        
-        handleAuthError(error);
-    }
-};
-
-// ============================================
 // FORGOT PASSWORD
 // ============================================
 
 window.forgotPassword = async function() {
     const email = document.getElementById('auth-email').value.trim();
-    
-    if (!email) {
-        showError('Please enter your email address first.');
-        return;
-    }
+    if (!email) { showError('Please enter your email address first.'); return; }
     
     hideAuthMessages();
     
@@ -253,8 +268,6 @@ window.forgotPassword = async function() {
         await sendPasswordResetEmail(auth, email);
         showSuccess('Password reset email sent! Check your inbox.');
     } catch (error) {
-        console.error('Password reset error:', error);
-        
         if (error.code === 'auth/user-not-found') {
             showError('No account found with this email address.');
         } else {
@@ -271,25 +284,25 @@ window.logoutUser = async function() {
     try {
         await signOut(auth);
         
-        // Clear localStorage
         localStorage.removeItem('log_uid');
         localStorage.removeItem('log_name');
         localStorage.removeItem('log_pic');
         localStorage.removeItem('log_email');
         
-        console.log('User logged out');
+        if (typeof google !== 'undefined' && google.accounts) {
+            google.accounts.id.disableAutoSelect();
+        }
         
-        // Show login screen via body class
+        console.log('User logged out');
         document.body.classList.remove('logged-in');
         document.body.classList.add('not-logged-in');
-        
     } catch (error) {
         console.error('Logout error:', error);
     }
 };
 
 // ============================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================
 
 async function createUserDocument(user, displayName) {
@@ -302,50 +315,33 @@ async function createUserDocument(user, displayName) {
             nightHours: 0,
             trips: []
         }, { merge: true });
-        
-        console.log('User document created/updated in Firestore');
     } catch (error) {
         console.error('Error creating user document:', error);
     }
 }
 
 function handleAuthError(error) {
-    const errorMessages = {
-        'auth/email-already-in-use': 'This email is already registered. Try signing in instead.',
+    const msgs = {
+        'auth/email-already-in-use': 'This email is already registered. Try signing in.',
         'auth/invalid-email': 'Please enter a valid email address.',
-        'auth/user-disabled': 'This account has been disabled.',
-        'auth/user-not-found': 'No account found with this email. Try signing up.',
-        'auth/wrong-password': 'Incorrect password. Please try again.',
-        'auth/invalid-credential': 'Invalid email or password. Please try again.',
-        'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
-        'auth/network-request-failed': 'Network error. Please check your connection.',
-        'auth/weak-password': 'Password is too weak. Use at least 6 characters.'
+        'auth/user-not-found': 'No account found. Try signing up.',
+        'auth/wrong-password': 'Incorrect password.',
+        'auth/invalid-credential': 'Invalid email or password.',
+        'auth/too-many-requests': 'Too many attempts. Try again later.',
+        'auth/weak-password': 'Password must be at least 6 characters.'
     };
-    
-    const message = errorMessages[error.code] || 'An error occurred. Please try again.';
-    showError(message);
+    showError(msgs[error.code] || 'An error occurred. Please try again.');
 }
 
 function handleSuccessfulLogin(user) {
-    // Store user info in localStorage (for compatibility with existing app code)
-    localStorage.setItem('log_uid', user.uid);
-    localStorage.setItem('log_name', user.displayName || 'User');
-    localStorage.setItem('log_pic', user.photoURL || '');
-    localStorage.setItem('log_email', user.email || '');
+    console.log('Login successful:', user.displayName || user.email);
     
-    console.log('Login successful, user info stored:', user.displayName);
-    
-    // Hide login screen, show app via body classes
     document.body.classList.remove('not-logged-in');
     document.body.classList.add('logged-in');
     
-    // Show sync area
     const syncArea = document.getElementById('sync-status-area');
-    if (syncArea) {
-        syncArea.style.display = 'flex';
-    }
+    if (syncArea) syncArea.style.display = 'flex';
     
-    // Update user info display
     const userInfo = document.getElementById('user-info');
     if (userInfo) {
         const pic = user.photoURL;
@@ -358,44 +354,33 @@ function handleSuccessfulLogin(user) {
         }
     }
     
-    // Pull data from cloud if available
-    if (typeof window.pullFromCloud === 'function') {
-        window.pullFromCloud();
-    }
-    
-    // Initialize dashboard
-    if (typeof window.loadDashboard === 'function') {
-        window.loadDashboard();
-    }
+    if (typeof window.pullFromCloud === 'function') window.pullFromCloud();
+    if (typeof window.loadDashboard === 'function') window.loadDashboard();
 }
 
-// ============================================
-// AUTH STATE LISTENER
-// ============================================
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // User is signed in
-        console.log('Auth state: signed in as', user.email);
-        handleSuccessfulLogin(user);
-    } else {
-        // User is signed out
-        console.log('Auth state: signed out');
-        
-        // Show login screen via body class
-        document.body.classList.remove('logged-in');
-        document.body.classList.add('not-logged-in');
-        
-        // Hide sync area
-        const syncArea = document.getElementById('sync-status-area');
-        if (syncArea) {
-            syncArea.style.display = 'none';
-        }
+function checkExistingLogin() {
+    const uid = localStorage.getItem('log_uid');
+    const name = localStorage.getItem('log_name');
+    const email = localStorage.getItem('log_email');
+    const pic = localStorage.getItem('log_pic');
+    
+    if (uid && email) {
+        console.log('Found existing login:', email);
+        handleSuccessfulLogin({ uid, displayName: name, email, photoURL: pic });
+        return true;
     }
-});
+    return false;
+}
 
 // ============================================
 // INITIALIZE
 // ============================================
 
-console.log('Auth.js loaded - Firebase Authentication ready');
+if (!checkExistingLogin()) {
+    document.body.classList.add('not-logged-in');
+    document.body.classList.remove('logged-in');
+}
+
+initializeGoogleSignIn();
+
+console.log('Auth.js loaded - Hybrid (GIS + Firebase Email)');
