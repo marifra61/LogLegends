@@ -177,7 +177,8 @@ function initializeGoogleSignIn() {
                 client_id: GOOGLE_CLIENT_ID,
                 callback: handleGoogleCredentialResponse,
                 auto_select: false,
-                cancel_on_tap_outside: true
+                cancel_on_tap_outside: true,
+                use_fedcm_for_prompt: false  // Disable FedCM to fix AbortError
             });
             
             console.log('Google Identity Services initialized');
@@ -294,10 +295,14 @@ window.logoutUser = async function() {
         }
         
         console.log('User logged out');
-        document.body.classList.remove('logged-in');
-        document.body.classList.add('not-logged-in');
+        
+        // Force reload to show fresh login screen
+        window.location.reload();
+        
     } catch (error) {
         console.error('Logout error:', error);
+        // Reload anyway to ensure clean state
+        window.location.reload();
     }
 };
 
