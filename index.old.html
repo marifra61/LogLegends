@@ -24,20 +24,19 @@
 <body>
     <div class="app-container">
         <!-- Login Screen -->
-        <div id="google-login-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <h1 style="color: white; font-size: 2.5rem; margin-bottom: 20px;">🚗 LogLegends</h1>
-            <p style="color: white; margin-bottom: 30px;">Track your driving hours with ease</p>
-            <div id="g_id_signin" style="margin: 20px auto;"></div>
-        </div>
+<div id="google-login-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <h1 style="color: white; font-size: 2.5rem; margin-bottom: 20px;">🚗 LogLegends</h1>
+    <p style="color: white; margin-bottom: 30px;">Track your driving hours with ease</p>
+    <div id="g_id_signin" style="margin: 20px auto;"></div>
+</div>
 
-        <!-- Sync Status Area with Premium Badge -->
+        <!-- Sync Status Area -->
         <div id="sync-status-area" style="display:none;" class="collapsed">
             <button id="close-sync-btn" onclick="toggleSyncModal()" style="display:none;">×</button>
             <div id="user-info" onclick="toggleSyncModal()"></div>
             <div id="sync-time"></div>
             <div id="sync-controls" style="display:none;">
                 <button onclick="pushToCloud()" style="background: #00e5ff; color: #000;">Sync</button>
-                <button onclick="window.showPricingModal()" style="background: #FFD700; color: #000;">⭐ Premium</button>
                 <button onclick="logoutUser()" style="background: #ff4444; color: white;">Logout</button>
             </div>
         </div>
@@ -130,8 +129,138 @@
                 <div style="color: white; font-size: 1rem; line-height: 1.8;">
                     <p><strong>Name:</strong> <span id="settings-name">Loading...</span></p>
                     <p><strong>Email:</strong> <span id="settings-email">Loading...</span></p>
-                    <p><strong>Status:</strong> <span id="settings-status">Free</span></p>
                 </div>
+            </div>
+
+            <!-- Hour Requirements Section -->
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 5px;">Hour Requirements</h3>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 18px;">
+                    Adjust to match your state's requirements. Default: North Carolina.
+                </p>
+
+                <!-- Total Hours -->
+                <div style="margin-bottom: 16px;">
+                    <label for="req-total" style="color: white; font-size: 0.95rem; display: block; margin-bottom: 6px;">
+                        Total Hours Required
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" id="req-total" min="0" max="500" step="1" value="60" style="
+                            flex: 1;
+                            background: rgba(255,255,255,0.1);
+                            border: 1px solid rgba(0,229,255,0.3);
+                            border-radius: 8px;
+                            color: white;
+                            padding: 12px 14px;
+                            font-size: 1.1rem;
+                            outline: none;
+                            -webkit-appearance: none;
+                        " onchange="saveRequirements()">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem; min-width: 40px;">hours</span>
+                    </div>
+                </div>
+
+                <!-- Night Hours -->
+                <div style="margin-bottom: 16px;">
+                    <label for="req-night" style="color: white; font-size: 0.95rem; display: block; margin-bottom: 6px;">
+                        Night Hours Required
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" id="req-night" min="0" max="500" step="1" value="10" style="
+                            flex: 1;
+                            background: rgba(255,255,255,0.1);
+                            border: 1px solid rgba(255,107,53,0.3);
+                            border-radius: 8px;
+                            color: white;
+                            padding: 12px 14px;
+                            font-size: 1.1rem;
+                            outline: none;
+                            -webkit-appearance: none;
+                        " onchange="saveRequirements()">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem; min-width: 40px;">hours</span>
+                    </div>
+                </div>
+
+                <!-- Weekly Hours -->
+                <div style="margin-bottom: 16px;">
+                    <label for="req-weekly" style="color: white; font-size: 0.95rem; display: block; margin-bottom: 6px;">
+                        Weekly Hours Goal
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" id="req-weekly" min="0" max="500" step="1" value="10" style="
+                            flex: 1;
+                            background: rgba(255,255,255,0.1);
+                            border: 1px solid rgba(0,230,118,0.3);
+                            border-radius: 8px;
+                            color: white;
+                            padding: 12px 14px;
+                            font-size: 1.1rem;
+                            outline: none;
+                            -webkit-appearance: none;
+                        " onchange="saveRequirements()">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem; min-width: 40px;">hours</span>
+                    </div>
+                </div>
+
+
+<!-- BATTERY SAVER TOGGLE - ONLY ADD THIS ONCE to index.html Settings page -->
+<!-- Place AFTER the "Hour Requirements" section and BEFORE the "Data Management" section -->
+<!-- DELETE any duplicate Battery Saver sections! -->
+
+<div class="settings-section" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 20px; margin-bottom: 20px;">
+    <h3 style="color: white; margin: 0 0 10px 0; font-size: 16px;">🔋 Battery Saver Mode</h3>
+    <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin: 0 0 15px 0;">
+        Reduces battery drain during drives by disabling live map and using low-power GPS.
+    </p>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <span style="color: white; font-weight: 500;">Battery Saver</span>
+            <span id="battery-saver-status" style="margin-left: 10px; font-size: 13px; color: rgba(255,255,255,0.5);">Off</span>
+        </div>
+        <div onclick="toggleBatterySaver()" style="position: relative; width: 50px; height: 28px; cursor: pointer;">
+            <input type="checkbox" id="battery-saver-toggle" style="display: none;">
+            <div id="battery-saver-track" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; border-radius: 28px; transition: background-color 0.3s;"></div>
+            <div id="battery-saver-thumb" style="position: absolute; height: 22px; width: 22px; left: 3px; top: 3px; background-color: white; border-radius: 50%; transition: left 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 15px; padding: 12px; background: rgba(0,230,118,0.1); border-radius: 10px; border-left: 3px solid #00e676;">
+        <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 0;">
+            <strong style="color: #00e676;">When ON:</strong><br>
+            • Screen can turn off during drives<br>
+            • GPS updates every 10 min (vs 5 min)<br>
+            • No live map display<br>
+            • Hours still tracked accurately
+        </p>
+    </div>
+</div>
+
+
+
+<!-- Required CSS for toggle switch - add to styles.css if not already present -->
+<style>
+.toggle-switch input:checked + span {
+    background-color: #00e676;
+}
+.toggle-switch input:checked + span + span {
+    transform: translateX(22px);
+}
+</style>
+
+
+                <!-- Reset to defaults -->
+                <button onclick="resetRequirements()" style="
+                    width: 100%;
+                    background: transparent;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    color: rgba(255,255,255,0.6);
+                    padding: 10px;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    margin-top: 5px;
+                ">Reset to NC Defaults (60 / 10 / 10)</button>
             </div>
 
             <!-- Data Summary Section -->
@@ -142,28 +271,34 @@
                 </div>
             </div>
 
-            <!-- Premium Section -->
-            <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1)); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid rgba(255, 215, 0, 0.3);">
-                <h3 style="color: #FFD700; font-size: 1.2rem; margin-bottom: 15px;">⭐ Premium</h3>
-                <button onclick="window.showPricingModal()" style="
-                    width: 100%;
-                    background: linear-gradient(135deg, #FFD700, #FFA500);
-                    color: #000;
+            <!-- Support LogLegends Section (replaces Premium) -->
+            <div id="support-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                <h3 style="color: white; margin: 0 0 8px 0; font-size: 1.1rem;">💚 Support LogLegends</h3>
+                <p style="color: rgba(255,255,255,0.9); margin: 0 0 15px 0; font-size: 0.9rem;">
+                    This app is 100% free. Tips help cover development costs.
+                </p>
+                <button id="support-btn" onclick="openSupportModal()" style="
+                    background: white;
+                    color: #667eea;
                     border: none;
-                    padding: 15px;
+                    padding: 12px 28px;
                     border-radius: 10px;
-                    font-size: 1.1rem;
-                    font-weight: bold;
+                    font-size: 1rem;
+                    font-weight: 600;
                     cursor: pointer;
-                ">Upgrade to Premium</button>
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                ">☕ Leave a Tip</button>
+                <div id="support-status" style="display: none; background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 10px; color: white; font-weight: 600; margin-top: 10px;">
+                    💚 Thank you for your support!
+                </div>
             </div>
 
             <!-- Help Section -->
             <div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                 <h3 style="color: #00e5ff; font-size: 1.2rem; margin-bottom: 15px;">Help & Support</h3>
                 <div style="color: white; font-size: 0.95rem; line-height: 1.8;">
-                    <p>📧 <strong>Email:</strong> support@loglegends.com</p>
-                    <p>📖 <strong>Version:</strong> 1.0.0</p>
+                    <p>📧 <strong>Email:</strong> support@loglegends.org</p>
+                    <p>📖 <strong>Version:</strong> 1.1.0</p>
                 </div>
             </div>
 
@@ -208,7 +343,7 @@
                 <span></span>
                 Trips
             </button>
-            <button class="nav-item" onclick="showPage('settings')" id="nav-sett" aria-label="Settings">
+            <button class="nav-item" onclick="showPage('settings'); loadSettingsData();" id="nav-sett" aria-label="Settings">
                 <span></span>
                 Settings
             </button>
@@ -219,7 +354,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="module" src="auth.js"></script>
     
     <script>
         // Navigate to checklist when safety status is clicked
@@ -249,65 +384,13 @@
                 closeBtn.style.display = 'none';
             }
         };
+		</script>
         
-        window.onload = function() {
-            const checkGoogle = setInterval(function() {
-                if (typeof google !== 'undefined' && google.accounts) {
-                    clearInterval(checkGoogle);
-                    
-                    google.accounts.id.initialize({
-                        client_id: "807592232939-pr256ntaj81m62pggratakrogl43hci8.apps.googleusercontent.com",
-                        callback: handleCredentialResponse
-                    });
-                    
-                    google.accounts.id.renderButton(
-                        document.getElementById("g_id_signin"),
-                        { 
-                            theme: "filled_blue", 
-                            size: "large",
-                            text: "signin_with",
-                            shape: "rectangular"
-                        }
-                    );
-                    
-                    console.log('Google Sign-In initialized');
-                }
-            }, 100);
-        };
-        
-        function handleCredentialResponse(response) {
-            try {
-                if (!response || !response.credential) {
-                    console.error('Invalid credential response');
-                    return;
-                }
-                
-                const base64Url = response.credential.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                
-                const payload = JSON.parse(jsonPayload);
-                
-                localStorage.setItem('log_uid', payload.sub);
-                localStorage.setItem('log_name', payload.name || 'User');
-                localStorage.setItem('log_pic', payload.picture || '');
-                localStorage.setItem('log_email', payload.email || '');
-                
-                console.log('Login successful:', payload.name);
-                location.reload();
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed. Please try again.');
-            }
-        }
-    </script>
+       
 
     <!-- Load app scripts in correct order -->
     <script type="module" src="app.js"></script>
     <script src="storage.js"></script>
-    <script src="freemium.js"></script>
     <script src="map.js"></script>
     <script src="dashboard.js"></script>
     <script src="checklist.js"></script>
@@ -315,45 +398,14 @@
     <script src="profile.js"></script>
     <script src="pdf-export.js"></script>
     <script src="settings.js"></script>
+    <script src="tips.js"></script>
     
     <script>
-        // Override showPage to load settings data
-        const originalShowPageFn = window.showPage;
-        window.showPage = function(pageId) {
-            // Call original function
-            if (originalShowPageFn) {
-                originalShowPageFn(pageId);
-            }
-            
-            // Load settings data when opening settings page
-            if (pageId === 'settings') {
-                setTimeout(() => {
-                    // Update user info
-                    const nameEl = document.getElementById('settings-name');
-                    const emailEl = document.getElementById('settings-email');
-                    const statusEl = document.getElementById('settings-status');
-                    
-                    if (nameEl) nameEl.textContent = localStorage.getItem('log_name') || 'N/A';
-                    if (emailEl) emailEl.textContent = localStorage.getItem('log_email') || 'N/A';
-                    if (statusEl) {
-                        const isPremium = window.isPremiumUser ? window.isPremiumUser() : false;
-                        statusEl.textContent = isPremium ? '⭐ Premium' : 'Free';
-                        statusEl.style.color = isPremium ? '#FFD700' : 'white';
-                    }
-                    
-                    // Update data summary and delete button
-                    if (window.updateSettingsDisplay) {
-                        window.updateSettingsDisplay();
-                    }
-                }, 100);
-            }
-        };
-        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed'));
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed:', err));
             });
         }
     </script>

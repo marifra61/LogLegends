@@ -278,7 +278,11 @@ window.logoutUser = async function() {
         localStorage.removeItem('log_email');
         
         console.log('User logged out');
-        location.reload();
+        
+        // Show login screen via body class
+        document.body.classList.remove('logged-in');
+        document.body.classList.add('not-logged-in');
+        
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -331,13 +335,12 @@ function handleSuccessfulLogin(user) {
     
     console.log('Login successful, user info stored:', user.displayName);
     
-    // Hide login screen, show app
-    const loginScreen = document.getElementById('login-screen');
-    const syncArea = document.getElementById('sync-status-area');
+    // Hide login screen, show app via body classes
+    document.body.classList.remove('not-logged-in');
+    document.body.classList.add('logged-in');
     
-    if (loginScreen) {
-        loginScreen.style.display = 'none';
-    }
+    // Show sync area
+    const syncArea = document.getElementById('sync-status-area');
     if (syncArea) {
         syncArea.style.display = 'flex';
     }
@@ -379,13 +382,12 @@ onAuthStateChanged(auth, (user) => {
         // User is signed out
         console.log('Auth state: signed out');
         
-        // Show login screen
-        const loginScreen = document.getElementById('login-screen');
-        const syncArea = document.getElementById('sync-status-area');
+        // Show login screen via body class
+        document.body.classList.remove('logged-in');
+        document.body.classList.add('not-logged-in');
         
-        if (loginScreen) {
-            loginScreen.style.display = 'flex';
-        }
+        // Hide sync area
+        const syncArea = document.getElementById('sync-status-area');
         if (syncArea) {
             syncArea.style.display = 'none';
         }
