@@ -117,7 +117,14 @@ window.signInWithGoogle = function() {
         return;
     }
     
-    google.accounts.id.prompt();
+    // Try to click the hidden Google button (more reliable than prompt)
+    const hiddenBtn = document.querySelector('#g_id_signin div[role="button"]');
+    if (hiddenBtn) {
+        hiddenBtn.click();
+    } else {
+        // Fallback to prompt
+        google.accounts.id.prompt();
+    }
 };
 
 // Handle Google credential response (called by GIS)
@@ -178,7 +185,25 @@ function initializeGoogleSignIn() {
                 callback: handleGoogleCredentialResponse,
                 auto_select: false,
                 cancel_on_tap_outside: true,
-                use_fedcm_for_prompt: false  // Disable FedCM to fix AbortError
+                use_fedcm_for_prompt: false
+            });
+            
+            // Create a hidden container for the Google button
+            let hiddenContainer = document.getElementById('g_id_signin');
+            if (!hiddenContainer) {
+                hiddenContainer = document.createElement('div');
+                hiddenContainer.id = 'g_id_signin';
+                hiddenContainer.style.cssText = 'position: absolute; top: -9999px; left: -9999px;';
+                document.body.appendChild(hiddenContainer);
+            }
+            
+            // Render the Google button (hidden)
+            google.accounts.id.renderButton(hiddenContainer, {
+                type: 'standard',
+                theme: 'outline',
+                size: 'large',
+                text: 'signin_with',
+                shape: 'rectangular'
             });
             
             console.log('Google Identity Services initialized');
